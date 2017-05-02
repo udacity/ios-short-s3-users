@@ -1,0 +1,72 @@
+swagger: '2.0'
+info:
+  title: Chill - Users API
+  description: This API manages the login lifecycle of a Chill user.
+  version: 1.0.0
+paths:
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - text/plain
+      description: This endpoint allows the user to authenticate with the system by passing a valid Facebook authorisation token.
+      parameters:
+      - name: token
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            token:
+              type: string
+      responses:
+        '200':
+          description: Login successful - returns a Base64 encoded JWT.
+          schema:
+            type: string
+        '401':
+          description: Not authorised
+  /user/logout:
+    get:
+      description: Log the current user out of the system and invalidate the provided JWT.
+      responses:
+        '200':
+          description: Logout successful.
+        '401':
+          description: Not authorised.
+      security:
+      - user_auth: []
+  /user/profile:
+    get:
+      description: Retrieve the current users profile.
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/profile'
+        '401':
+          description: Not authorised
+      security:
+      - user_auth: []
+securityDefinitions:
+  user_auth:
+    type: apiKey
+    description: Base64 encoded JWT
+    name: Authorisation bearer
+    in: header
+definitions:
+  profile:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Users id
+      name:
+        type: string
+        description: Users full name
+      image:
+        type: string
+        description: URL reference for the profile image
