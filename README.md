@@ -1,2 +1,2 @@
-# chill-users
+# users
 Users microservice.
