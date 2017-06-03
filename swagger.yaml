@@ -1,8 +1,23 @@
 swagger: '2.0'
+
 info:
-  title: Chill - Users API
-  description: This API manages the login lifecycle of a Chill user.
-  version: 1.0.0
+  version: '1.0.0'
+  title: 'Users'
+  description: 'Microservice for managing users.'
+  contact:
+    name: Jarrod Parkes
+    email: jarrod@udacity.com
+    url: http://jarrodparkes.com
+  license:
+    name: MIT License
+    
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+  
 paths:
   /user/login:
     post:
