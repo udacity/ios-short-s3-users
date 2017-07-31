@@ -10,14 +10,14 @@ info:
     url: http://jarrodparkes.com
   license:
     name: MIT License
-    
+
 schemes:
   - https
 consumes:
   - application/json
 produces:
   - application/json
-  
+
 paths:
   /user/login:
     post:
@@ -61,7 +61,7 @@ paths:
         '200':
           description: OK
           schema:
-            $ref: '#/definitions/profile'
+            $ref: '#/definitions/Profile'
         '401':
           description: Not authorised
       security:
@@ -73,15 +73,39 @@ securityDefinitions:
     name: Authorisation bearer
     in: header
 definitions:
-  profile:
+  Profile:
+    allOf:
+      - $ref: '#/definitions/NewProfile'
+      - required:
+        - id
+        properties:
+          id:
+            type: string
+            description: ID of user.
+            readOnly: true
+            default: "1"
+  NewProfile:
     type: object
     properties:
-      id:
-        type: string
-        description: Users id
       name:
         type: string
-        description: Users full name
-      image:
+        description: User's full name.
+        default: "Julian Doe"
+      photo_url:
         type: string
-        description: URL reference for the profile image
+        description: URL to user's profile image.
+        default: "https://example.net"
+      location:
+        type: string
+        description: User's location.
+        default: "San Francisco, CA"
+      created_at:
+        type: string
+        description: Date event was created.
+        format: YYYY-mm-dd HH:mm:ss
+        default: "2017-07-24 20:43:51"
+      updated_at:
+        type: string
+        description: Date event was created.
+        format: YYYY-mm-dd HH:mm:ss
+        default: "2017-07-24 20:43:51"
