@@ -21,10 +21,6 @@ produces:
 paths:
   /user/login:
     post:
-      consumes:
-      - application/json
-      produces:
-      - text/plain
       description: This endpoint allows the user to authenticate with the system by passing a valid Facebook authorisation token.
       parameters:
       - name: token
@@ -55,8 +51,6 @@ paths:
   /user/profile:
     get:
       description: Retrieve the current user's profile.
-      produces:
-      - application/json
       responses:
         '200':
           description: OK
@@ -87,8 +81,6 @@ paths:
               unfavorite:
                 type: boolean
                 default: false
-      produces:
-      - application/json
       responses:
         '200':
           description: OK
