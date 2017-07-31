@@ -54,7 +54,7 @@ paths:
       - user_auth: []
   /user/profile:
     get:
-      description: Retrieve the current users profile.
+      description: Retrieve the current user's profile.
       produces:
       - application/json
       responses:
@@ -62,6 +62,38 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/Profile'
+        '401':
+          description: Not authorised
+      security:
+      - user_auth: []
+  /user/favorite:
+    post:
+      description: Add favorite to user's profile.
+      parameters:
+        - in: body
+          name: favorite
+          description: Activity to favorite.
+          schema:
+            type: object
+            required:
+              - favorite_id
+            properties:
+              favorite_id:
+                type: string
+                default: "2"
+              favorite:
+                type: boolean
+                default: true
+              unfavorite:
+                type: boolean
+                default: false
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/Status'
         '401':
           description: Not authorised
       security:
@@ -109,3 +141,18 @@ definitions:
         description: Date event was created.
         format: YYYY-mm-dd HH:mm:ss
         default: "2017-07-24 20:43:51"
+  Status:
+    type: object
+    properties:
+      code:
+        type: integer
+        description: Error status code.
+        format: int32
+        default: 1
+      message:
+        type: string
+        description: Error description.
+        default: "Activity favorited."
+    required:
+      - code
+      - message
