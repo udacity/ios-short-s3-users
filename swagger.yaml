@@ -146,12 +146,12 @@ definitions:
     properties:
       code:
         type: integer
-        description: Error status code.
+        description: Status code.
         format: int32
         default: 1
       message:
         type: string
-        description: Error description.
+        description: Status message.
         default: "Activity favorited."
     required:
       - code
