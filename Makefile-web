@@ -1,0 +1,74 @@
+# dev (microservice) environment
+WEB_DOCKERFILE=Dockerfile-web
+WEB_IMAGE=kitura-server
+WEB_CONTAINER_NAME=users-server
+WEB_CONTAINER_PORT=8080
+WEB_HOST_PORT=80
+
+# testing
+TEST_COMMAND=TEST=true swift test -Xlinker -L/usr/local/lib
+
+# =============================
+# Web (Microservice) Container
+# =============================
+web_dev:
+	docker run --name ${WEB_CONTAINER_NAME} \
+	-it --rm -v ${PWD}:/src \
+	-w /src \
+	-e MYSQL_HOST=${DB_HOST} \
+	-e MYSQL_PORT=${DB_PORT} \
+	-e MYSQL_USER=${DB_USER} \
+	-e MYSQL_PASSWORD=${DB_PASSWORD} \
+	-e MYSQL_DATABASE=${DB_DATABASE} \
+	-p ${WEB_HOST_PORT}:${WEB_CONTAINER_PORT} ${WEB_IMAGE} /bin/bash
+
+web_build:
+	swift build -Xlinker -L/usr/local/lib
+
+web_build_run: web_build
+	./.build/debug/UsersServer
+
+web_clean:
+	rm -rf .build
+	rm Package.pins
+
+web_unit_test:
+	$(TEST_COMMAND) -s UsersTests.HandlersTests
+	$(TEST_COMMAND) -s UsersTests.QueryResultAdaptorTests
+
+web_functional_test:
+	$(TEST_COMMAND) -s FunctionalTests.FunctionalTests
+
+web_unit_test_docker:
+	docker run -d \
+		-v $(shell pwd):/src \
+		--name web_unit_test \
+		-w /src \
+		${WEB_IMAGE} tail -f /dev/null
+
+	$(call execute_docker_test, web_unit_test, UsersTests.HandlersTests)
+	$(call execute_docker_test, web_unit_test, UsersTests.QueryResultAdaptorTests)
+
+	docker stop web_unit_test
+	docker rm web_unit_test
+
+web_functional_test_docker:
+	docker run --rm -v $(shell pwd):/src \
+	-w /src ${WEB_IMAGE} /bin/bash -c 'TEST=true swift test -s FunctionalTests.FunctionalTests --build-path=/.build'
+
+web_release_build:
+	docker run -it --rm -v $(shell pwd):/src -w /src kitura-server /bin/bash -c \
+		"swift build -c release \
+		-Xlinker -L/usr/lib/swift/linux \
+		-Xlinker -L/usr/local/lib \
+		-Xswiftc -static-stdlib"
+	docker run -it --rm -v $(shell pwd):/src -w /src kitura-server /bin/bash -c \
+		"cp /usr/lib/swift/linux/*.so /src/linux_shared"
+	docker build -t users-server -f Dockerfile-prod .
+
+# Make function to execute swift test in docker
+define execute_docker_test
+	trap 'docker exec -it $(1) \
+			/bin/bash -c "${TEST_COMMAND} -s $(2)"' \
+		ERR EXIT
+endef

@@ -1,0 +1,3 @@
+FROM mysql:latest
+
+MAINTAINER Jarrod Parkes <jarrod@udacity.com>
