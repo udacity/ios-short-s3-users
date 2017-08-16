@@ -8,13 +8,13 @@ RUN useradd -ms /bin/bash swift
 # Add Swift foundation libraries
 COPY /linux_shared/* /application/
 
-COPY .build/release/ActivitiesServer /application/ActivitiesServer
+COPY .build/release/UsersServer /application/UsersServer
 COPY .build/release/libCHTTPParser.so /application/libCHTTPParser.so
 
-RUN chmod +x /application/ActivitiesServer
+RUN chmod +x /application/UsersServer
 
 USER swift
 WORKDIR /application
 
 ENTRYPOINT LD_LIBRARY_PATH=/usr/local/lib \
-    /application/ActivitiesServer
+    /application/UsersServer
