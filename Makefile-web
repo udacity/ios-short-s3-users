@@ -33,8 +33,7 @@ web_clean:
 	rm Package.pins
 
 web_unit_test:
-	$(TEST_COMMAND) -s UsersTests.HandlersTests
-	$(TEST_COMMAND) -s UsersTests.QueryResultAdaptorTests
+	$(TEST_COMMAND) -s UsersTests.AccountKitClientTests	
 
 web_functional_test:
 	$(TEST_COMMAND) -s FunctionalTests.FunctionalTests

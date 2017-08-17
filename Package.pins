@@ -38,6 +38,12 @@
       "version": "1.7.1"
     },
     {
+      "package": "KituraHTTPTest",
+      "reason": null,
+      "repositoryURL": "https://github.com/nicholasjackson/kitura-http-test.git",
+      "version": "0.2.0"
+    },
+    {
       "package": "LoggerAPI",
       "reason": null,
       "repositoryURL": "https://github.com/IBM-Swift/LoggerAPI.git",
