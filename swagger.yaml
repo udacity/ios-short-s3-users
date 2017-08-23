@@ -19,96 +19,141 @@ produces:
   - application/json
 
 paths:
-  /user/login:
+  /login:
     post:
-      description: This endpoint allows the user to authenticate with the system by passing a valid Facebook authorisation token.
+      description: Login user and generate base64 encoded JWT.
+      summary: Login user and generate base64 encoded JWT.
       parameters:
-      - name: token
-        in: body
-        required: true
-        schema:
-          type: object
-          properties:
-            token:
-              type: string
+       - name: code
+         in: query
+         description: Facebook authorization code.
+         type: string
+         pattern: '^(\w{280})$'
       responses:
-        '200':
-          description: Login successful - returns a Base64 encoded JWT.
+        200:
+          description: Login successful.
           schema:
-            type: string
-        '401':
-          description: Not authorised
-  /user/logout:
+            $ref: '#/definitions/Access'
+        400:
+          description: Bad request.
+          schema:
+            $ref: '#/definitions/Message'
+  /logout:
     get:
-      description: Log the current user out of the system and invalidate the provided JWT.
+      description: Logout user and invalidate the provided JWT.
+      summary: Logout user and invalidate the provided JWT.
       responses:
-        '200':
+        200:
           description: Logout successful.
-        '401':
-          description: Not authorised.
+          schema:
+            $ref: '#/definitions/Message'
+        401:
+          description: Unauthorized request.
+          schema:
+            $ref: '#/definitions/Message'
       security:
       - user_auth: []
-  /user/profile:
+  /profile:
     get:
       description: Retrieve the current user's profile.
+      summary: Retrieve the current user's profile.
       responses:
-        '200':
-          description: OK
+        200:
+          description: Successful response.
           schema:
             $ref: '#/definitions/Profile'
-        '401':
-          description: Not authorised
+        401:
+          description: Unauthorized request.
+          schema:
+            $ref: '#/definitions/Message'
       security:
       - user_auth: []
-  /user/favorite:
     post:
-      description: Add favorite to user's profile.
+      description: Update the current user's profile.
+      summary: Update the current user's profile.
+      parameters:
+        - name: profile
+          in: body
+          description: Data to update current user.
+          required: true
+          schema:
+            $ref: '#/definitions/UpdateProfile'
+      responses:
+        200:
+          description: Successful response.
+          schema:
+            $ref: '#/definitions/Message'
+        401:
+          description: Unauthorized request.
+          schema:
+            $ref: '#/definitions/Message'     
+  /favorites:
+    post:
+      description: Add or remove favorites from current user's profile.
+      summary: Add or remove favorites from current user's profile.
       parameters:
         - in: body
-          name: favorite
-          description: Activity to favorite.
+          name: favorites
+          description: Activities to add or remove from favorites.
+          required: true
           schema:
-            type: object
-            required:
-              - favorite_id
-            properties:
-              favorite_id:
-                type: string
-                default: "2"
-              favorite:
-                type: boolean
-                default: true
-              unfavorite:
-                type: boolean
-                default: false
+            $ref: '#/definitions/UpdateFavorite'
       responses:
-        '200':
-          description: OK
+        200:
+          description: Successful response.
           schema:
-            $ref: '#/definitions/Status'
-        '401':
-          description: Not authorised
+            $ref: '#/definitions/Message'
+        401:
+          description: Unauthorized request.
+          schema:
+            $ref: '#/definitions/Message'
       security:
       - user_auth: []
+
+responses:
+  NoContent:
+    description: The request was fulfilled, but nothing to return.
+  BadRequest:
+    description: Invalid request.
+  NotModified:
+    description: The specified resource was not modified.
+  NotFound:
+    description: The specified resource was not found.
+  Unauthorized:
+    description: Unauthorized.
+
 securityDefinitions:
   user_auth:
     type: apiKey
     description: Base64 encoded JWT
     name: Authorisation bearer
     in: header
+
 definitions:
   Profile:
     allOf:
-      - $ref: '#/definitions/NewProfile'
+      - $ref: '#/definitions/UpdateProfile'
       - required:
         - id
+        - created_at
+        - updated_at
         properties:
           id:
             type: string
             description: ID of user.
             readOnly: true
             default: "1"
-  NewProfile:
+          created_at:
+            type: string
+            description: Date event was created.
+            format: YYYY-mm-dd HH:mm:ss
+            default: "2017-07-24 20:43:51"
+          updated_at:
+            type: string
+            description: Date event was created.
+            format: YYYY-mm-dd HH:mm:ss
+            default: "2017-07-24 20:43:51"
+  UpdateProfile:
     type: object
     properties:
       name:
@@ -123,28 +168,47 @@ definitions:
         type: string
         description: User's location.
         default: "San Francisco, CA"
-      created_at:
-        type: string
-        description: Date event was created.
-        format: YYYY-mm-dd HH:mm:ss
-        default: "2017-07-24 20:43:51"
-      updated_at:
-        type: string
-        description: Date event was created.
-        format: YYYY-mm-dd HH:mm:ss
-        default: "2017-07-24 20:43:51"
-  Status:
+    required:
+      - name
+      - photo_url
+      - location
+  UpdateFavorite:
     type: object
     properties:
-      code:
-        type: integer
-        description: Status code.
-        format: int32
-        default: 1
+      activity_ids:
+        type: array
+        items:
+          type: string
+          description: ID of activity.
+          default: "4"
+      favorite:
+        type: boolean
+        description: If true, add to favorites. If false, remove from favorites.
+        default: true
+    required:
+      - activity_ids
+      - favorite
+  Message:
+    type: object
+    properties:
       message:
         type: string
-        description: Status message.
-        default: "Activity favorited."
+        description: A message.
     required:
-      - code
       - message
+    example:
+      message: "A message describing the HTTP status code."
+  Access:
+    type: object
+    properties:
+      id:
+        type: string
+        description: User id.
+        pattern: '^(\d{15})$'
+      jwt:
+        type: string
+        description: A base64 encoded JWT.
+        pattern: '^(\w{100})$'
+    required:
+      - id
+      - token
