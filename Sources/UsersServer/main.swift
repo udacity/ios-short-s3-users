@@ -32,8 +32,11 @@ let accountKitClient = AccountKitClient(
     appSecret: env["ACCOUNT_KIT_APP_SECRET"] ?? "ACCOUNT_KIT_APP_SECRET"
 )
 
+// Create JWT composer
+let jwtComposer = JWTComposer(privateKey: env["PRIVATE_KEY"] ?? "", publicKey: env["PUBLIC_KEY"] ?? "")
+
 // Create handlers
-let handlers = Handlers(dataAccessor: dataAccessor, accountKitClient: accountKitClient)
+let handlers = Handlers(dataAccessor: dataAccessor, accountKitClient: accountKitClient, jwtComposer: jwtComposer)
 
 // Create router
 let router = Router()

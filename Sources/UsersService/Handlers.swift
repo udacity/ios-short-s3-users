@@ -12,12 +12,14 @@ public class Handlers {
 
     let dataAccessor: UserMySQLDataAccessorProtocol
     let accountKitClient: AccountKitClient
+    let jwtComposer: JWTComposer
 
     // MARK: Initializer
 
-    public init(dataAccessor: UserMySQLDataAccessorProtocol, accountKitClient: AccountKitClient) {
+    public init(dataAccessor: UserMySQLDataAccessorProtocol, accountKitClient: AccountKitClient, jwtComposer: JWTComposer) {
         self.dataAccessor = dataAccessor
         self.accountKitClient = accountKitClient
+        self.jwtComposer = jwtComposer
     }
 
     // MARK: OPTIONS
@@ -70,17 +72,19 @@ public class Handlers {
         }
 
         accountKitClient.getAccessToken(withAuthCode: code) { (data, error) in
-            guard let data = data else {
-                Log.error("data is nil, error: \(error?.localizedDescription ?? "nil")")
-                return
-            }
-
             do {
+                guard let data = data else {
+                    Log.error("data is nil, error: \(error?.localizedDescription ?? "nil")")
+                    try response.send(json: JSON(["message": "could not get AccountKit access token"]))
+                                .status(.internalServerError).end()
+                    return
+                }
+
                 if let parsedData = try JSONSerialization.jsonObject(with: data) as? [String:Any], let id = parsedData["id"] as? String {
                     try response.send(json: JSON(["id": id])).status(.OK).end()
                 }
             } catch {
-                Log.error("could not parse data")
+                Log.error("\(error.localizedDescription)")
             }
         }
     }

@@ -1,3 +1,5 @@
+// NOTE: https://developers.facebook.com/docs/accountkit/graphapi
+
 import Foundation
 import LoggerAPI
 
@@ -9,9 +11,6 @@ enum AccountKitClientError: Error {
     case networkError
     case customError(String)
 }
-
-// https://developers.facebook.com/docs/accountkit/graphapi
-// see "Retrieving User Access Tokens with an Authorization Code"
 
 // MARK: - AccountKitClient
 
@@ -44,7 +43,7 @@ public class AccountKitClient {
             Log.error("could not create url for getAccessToken")
             return
         }
-        
+
         let task = session.dataTaskWithURL(url) { (data, response, error) in
             if let _ = error {
                 completion(nil, AccountKitClientError.networkError)
