@@ -14,6 +14,12 @@
       "version": "0.1.0"
     },
     {
+      "package": "COpenSSL",
+      "reason": null,
+      "repositoryURL": "https://github.com/PerfectlySoft/Perfect-COpenSSL-Linux.git",
+      "version": "2.0.3"
+    },
+    {
       "package": "HeliumLogger",
       "reason": null,
       "repositoryURL": "https://github.com/IBM-Swift/HeliumLogger.git",
@@ -38,6 +44,12 @@
       "version": "1.7.1"
     },
     {
+      "package": "LinuxBridge",
+      "reason": null,
+      "repositoryURL": "https://github.com/PerfectlySoft/Perfect-LinuxBridge.git",
+      "version": "2.0.2"
+    },
+    {
       "package": "LoggerAPI",
       "reason": null,
       "repositoryURL": "https://github.com/IBM-Swift/LoggerAPI.git",
@@ -54,6 +66,24 @@
       "reason": null,
       "repositoryURL": "https://github.com/IBM-Swift/OpenSSL.git",
       "version": "0.3.6"
+    },
+    {
+      "package": "PerfectCrypto",
+      "reason": null,
+      "repositoryURL": "https://github.com/PerfectlySoft/Perfect-Crypto.git",
+      "version": "1.0.9"
+    },
+    {
+      "package": "PerfectLib",
+      "reason": null,
+      "repositoryURL": "https://github.com/PerfectlySoft/PerfectLib.git",
+      "version": "2.0.11"
+    },
+    {
+      "package": "PerfectThread",
+      "reason": null,
+      "repositoryURL": "https://github.com/PerfectlySoft/Perfect-Thread.git",
+      "version": "2.0.12"
     },
     {
       "package": "Signals",
