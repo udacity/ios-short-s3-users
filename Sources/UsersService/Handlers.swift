@@ -72,19 +72,23 @@ public class Handlers {
         }
 
         accountKitClient.getAccessToken(withAuthCode: code) { (data, error) in
-            do {
-                guard let data = data else {
-                    Log.error("data is nil, error: \(error?.localizedDescription ?? "nil")")
-                    try response.send(json: JSON(["message": "could not get AccountKit access token"]))
-                                .status(.internalServerError).end()
-                    return
-                }
+            guard let data = data else {
+                Log.error("data is nil, error: \(error?.localizedDescription ?? "nil")")
+                try response.send(json: JSON(["message": "could not get AccountKit access token"]))
+                            .status(.internalServerError).end()
+                return
+            }
 
-                if let parsedData = try JSONSerialization.jsonObject(with: data) as? [String:Any], let id = parsedData["id"] as? String {
-                    try response.send(json: JSON(["id": id])).status(.OK).end()
-                }
-            } catch {
-                Log.error("\(error.localizedDescription)")
+            if let parsedData = try JSONSerialization.jsonObject(with: data) as? [String:Any], let id = parsedData["id"] as? String {
+                let jwt = self.jwtComposer.createSignedTokenWithPayload([
+                    "issuer": "com.udacity.gamenight",
+                    "issuedAt": Date().timeIntervalSince1970,
+                    "expiration": Date().append(months: 1).timeIntervalSince1970
+                ]) ?? ""
+                try response.send(json: JSON(["jwt": jwt, "id": id])).status(.OK).end()
+            } else {
+                Log.error("could not find accountkit id")
+                try response.status(.noContent).end()
             }
         }
     }

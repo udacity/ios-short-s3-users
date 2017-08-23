@@ -3,8 +3,6 @@
 import Foundation
 import LoggerAPI
 
-public typealias HTTPResult = (Data?, Error?) -> Void
-
 // MARK: - AccountKitClientError: Error
 
 enum AccountKitClientError: Error {
@@ -33,7 +31,7 @@ public class AccountKitClient {
     // MARK: Requests
 
     // exchange user auth code for user access token
-    public func getAccessToken(withAuthCode: String, completion: @escaping HTTPResult) {
+    public func getAccessToken(withAuthCode: String, completion: @escaping (Data?, Error?) throws -> Void) {
 
         guard let url = getURLWithPath("/access_token", withParameters: [
             "grant_type": "authorization_code",
@@ -45,18 +43,23 @@ public class AccountKitClient {
         }
 
         let task = session.dataTaskWithURL(url) { (data, response, error) in
-            if let _ = error {
-                completion(nil, AccountKitClientError.networkError)
-            } else if let response = response as? HTTPURLResponse, 200...299 ~= response.statusCode {
-                completion(data, nil)
-            } else {
-                completion(nil, AccountKitClientError.networkError)
+            do {
+                if let _ = error {
+                    try completion(nil, AccountKitClientError.networkError)
+                } else if let response = response as? HTTPURLResponse, 200...299 ~= response.statusCode {
+                    try completion(data, nil)
+                } else {
+                    try completion(nil, AccountKitClientError.networkError)
+                }
+            } catch {
+                Log.error("unable to parse response for getAccessToken")
+                return
             }
         }
         task.resume()
     }
 
-    public func getAccountData(completion: @escaping HTTPResult) {
+    public func getAccountData(completion: @escaping (Data?, Error?) throws -> Void) {
 
     }
 
