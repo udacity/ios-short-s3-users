@@ -25,7 +25,7 @@ public class AccountKitClient {
 
     // MARK: Initializer
 
-    init(session: URLSessionProtocol, appID: String, appSecret: String) {
+    public init(session: URLSessionProtocol, appID: String, appSecret: String) {
         self.session = session
         self.appID = appID
         self.appSecret = appSecret
@@ -36,20 +36,15 @@ public class AccountKitClient {
     // exchange user auth code for user access token
     public func getAccessToken(withAuthCode: String, completion: @escaping HTTPResult) {
 
-        // TODO: Use URLComponents
-
-        let urlString = "https://graph.accountkit.com/v1.2/access_token?" +
-            "grant_type=authorization_code&" +
-            "code=\(withAuthCode)&" +
-            "access_token=AA|\(appID)|\(appSecret)"
-        
-        guard let encodedString = urlString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed), let url = URL(string: encodedString) else {
-            print("cannot create url")
+        guard let url = getURLWithPath("/access_token", withParameters: [
+            "grant_type": "authorization_code",
+            "code": withAuthCode,
+            "access_token": "AA|\(appID)|\(appSecret)"
+        ]) else {
+            Log.error("could not create url for getAccessToken")
             return
         }
-
-        print(url)
-
+        
         let task = session.dataTaskWithURL(url) { (data, response, error) in
             if let _ = error {
                 completion(nil, AccountKitClientError.networkError)
@@ -64,5 +59,23 @@ public class AccountKitClient {
 
     public func getAccountData(completion: @escaping HTTPResult) {
 
+    }
+
+    // MARK: Utility
+
+    private func getURLWithPath(_ path: String, withParameters parameters: [String:Any]) -> URL? {
+
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = "graph.accountkit.com"
+        components.path = "/v1.2" + path
+        components.queryItems = [URLQueryItem]()
+
+        for (key, value) in parameters {
+            let queryItem = URLQueryItem(name: key, value: "\(value)")
+            components.queryItems!.append(queryItem)
+        }
+
+        return components.url
     }
 }

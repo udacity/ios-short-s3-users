@@ -20,6 +20,8 @@ web_dev:
 	-e MYSQL_USER=${DB_USER} \
 	-e MYSQL_PASSWORD=${DB_PASSWORD} \
 	-e MYSQL_DATABASE=${DB_DATABASE} \
+	-e FACEBOOK_APP_ID=${FACEBOOK_APP_ID} \
+	-e ACCOUNT_KIT_APP_SECRET=${ACCOUNT_KIT_APP_SECRET} \
 	-p ${WEB_HOST_PORT}:${WEB_CONTAINER_PORT} ${WEB_IMAGE} /bin/bash
 
 web_build:
@@ -33,7 +35,7 @@ web_clean:
 	rm Package.pins
 
 web_unit_test:
-	$(TEST_COMMAND) -s UsersTests.AccountKitClientTests	
+	$(TEST_COMMAND) -s UsersTests.AccountKitClientTests
 
 web_functional_test:
 	$(TEST_COMMAND) -s FunctionalTests.FunctionalTests

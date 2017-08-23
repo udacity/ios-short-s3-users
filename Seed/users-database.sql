@@ -26,7 +26,7 @@ ALTER DATABASE `game_night` CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
 DROP TABLE IF EXISTS `users`;
 
 CREATE TABLE `users` (
-  `id` int(6) unsigned NOT NULL AUTO_INCREMENT,
+  `id` int(15) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(50) NOT NULL,
   `location` varchar(200) NOT NULL,
   `photo_url` text,
@@ -58,8 +58,8 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `favorites`;
 
 CREATE TABLE `favorites` (
-  `id` int(6) unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` int(6) unsigned NOT NULL,
+  `id` int(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(15) unsigned NOT NULL,
   `activity_id` int(6) unsigned NOT NULL,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -1,5 +1,6 @@
 include Makefile-web
 include Makefile-db
+include Makefile-secrets
 
 # =============
 # Build Images

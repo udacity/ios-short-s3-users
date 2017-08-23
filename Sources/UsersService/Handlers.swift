@@ -11,11 +11,13 @@ public class Handlers {
     // MARK: Properties
 
     let dataAccessor: UserMySQLDataAccessorProtocol
+    let accountKitClient: AccountKitClient
 
     // MARK: Initializer
 
-    public init(dataAccessor: UserMySQLDataAccessorProtocol) {
+    public init(dataAccessor: UserMySQLDataAccessorProtocol, accountKitClient: AccountKitClient) {
         self.dataAccessor = dataAccessor
+        self.accountKitClient = accountKitClient
     }
 
     // MARK: OPTIONS
@@ -27,6 +29,14 @@ public class Handlers {
     }
 
     // MARK: GET
+
+    public func getProfile(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+        // TODO: Add implementation.
+    }
+
+    public func logout(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+        // TODO: Add implementation.
+    }
 
     public func getUsers(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
@@ -46,5 +56,42 @@ public class Handlers {
         }
 
         try response.send(json: users!.toJSON()).status(.OK).end()
+    }
+
+    // MARK: POST
+
+    public func login(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+
+        guard let code = request.queryParameters["code"] else {
+            Log.error("code (query parameter) missing")
+            try response.send(json: JSON(["message": "code (query parameter) missing"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        accountKitClient.getAccessToken(withAuthCode: code) { (data, error) in
+            guard let data = data else {
+                Log.error("data is nil, error: \(error?.localizedDescription ?? "nil")")
+                return
+            }
+
+            do {
+                if let parsedData = try JSONSerialization.jsonObject(with: data) as? [String:Any], let id = parsedData["id"] as? String {
+                    try response.send(json: JSON(["id": id])).status(.OK).end()
+                }
+            } catch {
+                Log.error("could not parse data")
+            }
+        }
+    }
+
+    // MARK: PUT
+
+    public func updateProfile(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+        // TODO: Add implementation.
+    }
+
+    public func updateFavorites(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+        // TODO: Add implementation.
     }
 }

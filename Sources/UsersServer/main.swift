@@ -20,13 +20,20 @@ connectionString.password = env["MYSQL_PASSWORD"] ?? "password"
 connectionString.database = env["MYSQL_DATABASE"] ?? "game_night"
 
 // Create connection pool
-var pool = MySQLConnectionPool(connectionString: connectionString, poolSize: 10, defaultCharset: "utf8mb4")
+let pool = MySQLConnectionPool(connectionString: connectionString, poolSize: 10, defaultCharset: "utf8mb4")
 
 // Create data accessor (uses pool to get connections and access data!)
-var dataAccessor = UserMySQLDataAccessor(pool: pool)
+let dataAccessor = UserMySQLDataAccessor(pool: pool)
+
+// Create AccountKit client
+let accountKitClient = AccountKitClient(
+    session: URLSession(configuration: URLSessionConfiguration.default),
+    appID: env["FACEBOOK_APP_ID"] ?? "FACEBOOK_APP_ID",
+    appSecret: env["ACCOUNT_KIT_APP_SECRET"] ?? "ACCOUNT_KIT_APP_SECRET"
+)
 
 // Create handlers
-let handlers = Handlers(dataAccessor: dataAccessor)
+let handlers = Handlers(dataAccessor: dataAccessor, accountKitClient: accountKitClient)
 
 // Create router
 let router = Router()
@@ -39,17 +46,17 @@ router.options("/*", handler: handlers.getOptions)
 
 // GET
 router.get("/*", middleware: CheckRequestMiddleware(method: .get))
-router.get("/users", handler: handlers.getUsers)
-router.get("/users/:id", handler: handlers.getUsers)
+router.get("/profile", handler: handlers.getProfile)
+router.get("/logout", handler: handlers.logout)
 
 // POST
 router.post("/*", middleware: CheckRequestMiddleware(method: .post))
+router.post("/login", handler: handlers.login)
 
 // PUT
 router.put("/*", middleware: CheckRequestMiddleware(method: .put))
-
-// DELETE
-router.delete("/*", middleware: CheckRequestMiddleware(method: .delete))
+router.put("/profile", handler: handlers.updateProfile)
+router.put("/favorites", handler: handlers.updateFavorites)
 
 // Add an HTTP server and connect it to the router
 Kitura.addHTTPServer(onPort: 8080, with: router)
