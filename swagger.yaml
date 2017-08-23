@@ -68,7 +68,7 @@ paths:
             $ref: '#/definitions/Message'
       security:
       - user_auth: []
-    post:
+    put:
       description: Update the current user's profile.
       summary: Update the current user's profile.
       parameters:
@@ -88,7 +88,7 @@ paths:
           schema:
             $ref: '#/definitions/Message'     
   /favorites:
-    post:
+    put:
       description: Add or remove favorites from current user's profile.
       summary: Add or remove favorites from current user's profile.
       parameters:
