@@ -6,3 +6,5 @@ tags
 .idea/
 Data/
 Makefile-secrets
+.private-key.pem
+.public-key.pem

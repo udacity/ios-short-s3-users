@@ -27,13 +27,18 @@ let dataAccessor = UserMySQLDataAccessor(pool: pool)
 
 // Create AccountKit client
 let accountKitClient = AccountKitClient(
-    session: URLSession(configuration: URLSessionConfiguration.default),
+    session: URLSession(configuration: .default),
     appID: env["FACEBOOK_APP_ID"] ?? "FACEBOOK_APP_ID",
     appSecret: env["ACCOUNT_KIT_APP_SECRET"] ?? "ACCOUNT_KIT_APP_SECRET"
 )
 
+// TODO: Use a service like S3 to deliver keys instead of injecting environment variables
+// Remove extra backslash characters (extra backslashes are added to keys when injecting)
+let privateKeyClean = env["PRIVATE_KEY"]?.replacingOccurrences(of: "\\n", with: "\n")
+let publicKeyClean = env["PUBLIC_KEY"]?.replacingOccurrences(of: "\\n", with: "\n")
+
 // Create JWT composer
-let jwtComposer = JWTComposer(privateKey: env["PRIVATE_KEY"] ?? "", publicKey: env["PUBLIC_KEY"] ?? "")
+let jwtComposer = JWTComposer(privateKey: privateKeyClean, publicKey: publicKeyClean)
 
 // Create handlers
 let handlers = Handlers(dataAccessor: dataAccessor, accountKitClient: accountKitClient, jwtComposer: jwtComposer)

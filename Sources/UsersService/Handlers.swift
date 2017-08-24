@@ -73,22 +73,32 @@ public class Handlers {
 
         accountKitClient.getAccessToken(withAuthCode: code) { (data, error) in
             guard let data = data else {
-                Log.error("data is nil, error: \(error?.localizedDescription ?? "nil")")
+                Log.error("data is nil, error is \(error?.localizedDescription ?? "nil")")
                 try response.send(json: JSON(["message": "could not get AccountKit access token"]))
                             .status(.internalServerError).end()
                 return
             }
 
-            if let parsedData = try JSONSerialization.jsonObject(with: data) as? [String:Any], let id = parsedData["id"] as? String {
-                let jwt = self.jwtComposer.createSignedTokenWithPayload([
-                    "issuer": "com.udacity.gamenight",
-                    "issuedAt": Date().timeIntervalSince1970,
-                    "expiration": Date().append(months: 1).timeIntervalSince1970
-                ]) ?? ""
+            guard let parsedData = try JSONSerialization.jsonObject(with: data) as? [String:Any],
+                let id = parsedData["id"] as? String else {
+                    Log.error("could not find AccountKit id")
+                    try response.send(json: JSON(["message": "could not find AccountKit id"]))
+                                .status(.internalServerError).end()
+                    return
+            }
+
+            let isNewUser = try self.dataAccessor.insertStubUser(withID: id)
+
+            if let jwt = self.jwtComposer.createSignedTokenWithPayload([
+                "iss": "http://gamenight.udacity.com",
+                "exp": Date().append(months: 1).timeIntervalSince1970,
+                "sub": "users microservice",
+                "new": isNewUser
+            ]) {
                 try response.send(json: JSON(["jwt": jwt, "id": id])).status(.OK).end()
             } else {
-                Log.error("could not find accountkit id")
-                try response.status(.noContent).end()
+                Log.error("could not create signed jwt")
+                try response.status(.internalServerError).end()
             }
         }
     }

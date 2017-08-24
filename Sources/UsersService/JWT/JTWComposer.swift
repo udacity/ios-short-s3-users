@@ -7,12 +7,12 @@ public class JWTComposer {
 
     // MARK: Properties
 
-    private let privateKey: String
-    private let publicKey: String
+    private let privateKey: String?
+    private let publicKey: String?
 
     // MARK: Initializer
 
-    public init(privateKey: String, publicKey: String) {
+    public init(privateKey: String?, publicKey: String?) {
         self.privateKey = privateKey
         self.publicKey = publicKey
     }
@@ -20,15 +20,18 @@ public class JWTComposer {
     // MARK: Create Token
 
     public func createSignedTokenWithPayload(_ payload: [String:Any]) -> String? {
+        guard let privateKey = privateKey else {
+            Log.error("private key is null, cannot sign token")
+            return nil
+        }
+
         guard let jwt = JWTCreator(payload: payload) else {
             Log.error("could not create jwt with payload")
             return nil
         }
 
         do {
-            Log.error("here1: \(privateKey)")
             let privateKeyAsPem = try PEMKey(source: privateKey)
-            Log.error("here2: \(privateKey)")
             return try jwt.sign(alg: .rs256, key: privateKeyAsPem)
         } catch let error as KeyError {
             Log.error("KeyError: \(error.msg)")
@@ -46,7 +49,13 @@ public class JWTComposer {
 
     /// Verify token based on the indicated algorithm and key.
     public func verifySignedToken(_ token: String) -> Bool {
+        guard let publicKey = publicKey else {
+            Log.error("public key is null, cannot verify token")
+            return false
+        }
+
         guard let jwt = JWTVerifier(token) else {
+            Log.error("could not create jwt object to verifty token")
             return false
         }
 
@@ -64,6 +73,7 @@ public class JWTComposer {
     /// Verify token based on payload.
     public func verifyPayloadForSignedToken(_ token: String, verifyPayload: ([String: Any]) -> Bool) -> Bool {
         guard let jwt = JWTVerifier(token) else {
+            Log.error("could not create jwt object to verifty token payload")
             return false
         }
 

@@ -8,6 +8,21 @@ WEB_HOST_PORT=80
 # testing
 TEST_COMMAND=TEST=true swift test -Xlinker -L/usr/local/lib
 
+# =======================================================================================================================
+# Inject Keys
+# Note: Must use `define` so that keys contain proper whitespace characters.
+# Credit: https://stackoverflow.com/questions/649246/is-it-possible-to-create-a-multi-line-string-variable-in-a-makefile
+# =======================================================================================================================
+define PRIVATE_KEY
+'$(shell cat .private-key.pem)'
+endef
+export PRIVATE_KEY
+
+define PUBLIC_KEY
+'$(shell cat .public-key.pem)'
+endef
+export PUBLIC_KEY
+
 # =============================
 # Web (Microservice) Container
 # =============================
