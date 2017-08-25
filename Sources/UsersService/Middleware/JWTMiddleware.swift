@@ -38,8 +38,8 @@ public class JWTMiddleware: RouterMiddleware {
         do {
 
             let jwt = try jwtComposer.getVerifiedJWTFromSignedToken(signedJWTToken)
-            try jwtComposer.verifyReservedClaimsForJWT(jwt, iss: "http://gamenight.udacity.com", sub: "users microservice")
-            try jwtComposer.verifyPrivateClaimsForJWT(jwt) { payload in
+            try jwtComposer.verifyReservedClaimsForPayload(jwt.payload, iss: "http://gamenight.udacity.com", sub: "users microservice")
+            try jwtComposer.verifyPrivateClaimsForPayload(jwt.payload) { payload in
 
                 var invalidClaims = [String]()
 

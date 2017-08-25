@@ -1,5 +1,6 @@
 import Kitura
 import LoggerAPI
+import Foundation
 import PerfectCrypto
 
 // MARK: - JWTError
@@ -75,10 +76,10 @@ public class JWTComposer {
     }
 
     /// Verify reserved claims.
-    public func verifyReservedClaimsForJWT(_ jwt: JWTVerifier, iss issuer: String, sub subject: String) throws {
-        guard let payloadIssuer = jwt.payload["iss"] as? String,
-            let _ = jwt.payload["exp"] as? Double,
-            let payloadSubject = jwt.payload["sub"] as? String else {
+    public func verifyReservedClaimsForPayload(_ payload: [String: Any], iss issuer: String, sub subject: String) throws {
+        guard let payloadIssuer = payload["iss"] as? String,
+            let payloadExpiration = payload["exp"] as? Double,
+            let payloadSubject = payload["sub"] as? String else {
             throw JWTError.invalidPayload("jwt payload does not contain iss, exp, and sub claims")
         }
 
@@ -89,11 +90,15 @@ public class JWTComposer {
         if payloadSubject != subject {
             throw JWTError.invalidPayload("jwt sub claim is invalid")
         }
+
+        if payloadExpiration < Date().timeIntervalSince1970 {
+            throw JWTError.invalidPayload("jwt has expired")
+        }
     }
 
     /// Verify private claims.
-    public func verifyPrivateClaimsForJWT(_ jwt: JWTVerifier, verifyPrivateClaims: ([String: Any]) -> [String]) throws {
-        let invalidClaims = verifyPrivateClaims(jwt.payload)
+    public func verifyPrivateClaimsForPayload(_ payload: [String: Any], verifyPrivateClaims: ([String: Any]) -> [String]) throws {
+        let invalidClaims = verifyPrivateClaims(payload)
         if invalidClaims.count > 0 {
             throw JWTError.invalidPayload("jwt private claims are invalid: \(invalidClaims)")
         }
