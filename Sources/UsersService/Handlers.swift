@@ -90,13 +90,16 @@ public class Handlers {
 
             let isNewUser = try self.dataAccessor.insertStubUser(withID: id)
 
-            if let jwt = self.jwtComposer.createSignedTokenWithPayload([
-                "iss": "http://gamenight.udacity.com",
-                "exp": Date().append(months: 1).timeIntervalSince1970,
-                "sub": "users microservice",
-            ]) {
-                try response.send(json: JSON(["jwt": jwt, "id": id, "new_user": isNewUser])).status(.OK).end()
-            } else {
+            do {
+                let jwt = try self.jwtComposer.createSignedTokenWithPayload([
+                    "iss": "http://gamenight.udacity.com",
+                    "exp": Date().append(months: 1).timeIntervalSince1970,
+                    "sub": "users microservice",
+                    "perms": isNewUser ? "usersProfile" : "usersAll,activities,events,friends",
+                    "user": id
+                ])
+                try response.send(json: JSON(["jwt": jwt, "id": id])).status(.OK).end()
+            } catch {
                 Log.error("could not create signed jwt")
                 try response.status(.internalServerError).end()
             }

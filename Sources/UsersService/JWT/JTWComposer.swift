@@ -1,5 +1,17 @@
-import PerfectCrypto
+import Kitura
 import LoggerAPI
+import PerfectCrypto
+
+// MARK: - JWTError
+
+public enum JWTError: Error {
+    case missingPrivateKey
+    case missingPublicKey
+    case cannotCreateJWT
+    case cannotSignJWT(String)
+    case cannotVerifyAlgAndKey
+    case invalidPayload(String)
+}
 
 // MARK: - JWTComposer
 
@@ -19,64 +31,71 @@ public class JWTComposer {
 
     // MARK: Create Token
 
-    public func createSignedTokenWithPayload(_ payload: [String:Any]) -> String? {
+    public func createSignedTokenWithPayload(_ payload: [String:Any]) throws -> String {
         guard let privateKey = privateKey else {
-            Log.error("private key is null, cannot sign token")
-            return nil
+            throw JWTError.missingPrivateKey
         }
 
         guard let jwt = JWTCreator(payload: payload) else {
-            Log.error("could not create jwt with payload")
-            return nil
+            throw JWTError.cannotCreateJWT
         }
 
         do {
             let privateKeyAsPem = try PEMKey(source: privateKey)
-            return try jwt.sign(alg: .rs256, key: privateKeyAsPem)
-        } catch let error as KeyError {
-            Log.error("KeyError: \(error.msg)")
-            return nil
+            let signedToken = try jwt.sign(alg: .rs256, key: privateKeyAsPem)
+            return signedToken
+        } catch is KeyError {
+            throw JWTError.cannotCreateJWT
         } catch JWT.Error.signingError(let message) {
-            Log.error("JWT.Error.signingError: \(message)")
-            return nil
+            throw JWTError.cannotSignJWT(message)
         } catch {
-            Log.error("could not sign jwt with payload: \(error.localizedDescription)")
-            return nil
+            throw JWTError.cannotSignJWT(error.localizedDescription)
         }
     }
 
     // MARK: Check Token
 
-    /// Verify token based on the indicated algorithm and key.
-    public func verifySignedToken(_ token: String) -> Bool {
+    /// Verify token algorithm and key.
+    public func getVerifiedJWTFromSignedToken(_ signedToken: String) throws -> JWTVerifier {
         guard let publicKey = publicKey else {
-            Log.error("public key is null, cannot verify token")
-            return false
+            throw JWTError.missingPublicKey
         }
 
-        guard let jwt = JWTVerifier(token) else {
-            Log.error("could not create jwt object to verifty token")
-            return false
+        guard let jwt = JWTVerifier(signedToken) else {
+            throw JWTError.cannotCreateJWT
         }
 
     	do {
             let publicKeyAsPem = try PEMKey(source: publicKey)
             try jwt.verify(algo: .rs256, key: publicKeyAsPem)
+            return jwt
         } catch {
-            Log.error("could not verify token: \(error.localizedDescription)")
-            return false
+            throw JWTError.cannotVerifyAlgAndKey
         }
-
-        return true
     }
 
-    /// Verify token based on payload.
-    public func verifyPayloadForSignedToken(_ token: String, verifyPayload: ([String: Any]) -> Bool) -> Bool {
-        guard let jwt = JWTVerifier(token) else {
-            Log.error("could not create jwt object to verifty token payload")
-            return false
+    /// Verify reserved claims.
+    public func verifyReservedClaimsForJWT(_ jwt: JWTVerifier, iss issuer: String, sub subject: String) throws {
+        guard let payloadIssuer = jwt.payload["iss"] as? String,
+            let _ = jwt.payload["exp"] as? Double,
+            let payloadSubject = jwt.payload["sub"] as? String else {
+            throw JWTError.invalidPayload("jwt payload does not contain iss, exp, and sub claims")
         }
 
-        return verifyPayload(jwt.payload)
+        if payloadIssuer != issuer {
+            throw JWTError.invalidPayload("jwt iss claim is invalid")
+        }
+
+        if payloadSubject != subject {
+            throw JWTError.invalidPayload("jwt sub claim is invalid")
+        }
+    }
+
+    /// Verify private claims.
+    public func verifyPrivateClaimsForJWT(_ jwt: JWTVerifier, verifyPrivateClaims: ([String: Any]) -> [String]) throws {
+        let invalidClaims = verifyPrivateClaims(jwt.payload)
+        if invalidClaims.count > 0 {
+            throw JWTError.invalidPayload("jwt private claims are invalid: \(invalidClaims)")
+        }
     }
 }
