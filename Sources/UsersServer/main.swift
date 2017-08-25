@@ -43,10 +43,9 @@ let jwtComposer = JWTComposer(privateKey: privateKeyClean, publicKey: publicKeyC
 // Create handlers
 let handlers = Handlers(dataAccessor: dataAccessor, accountKitClient: accountKitClient, jwtComposer: jwtComposer)
 
-// Create router
+// Create router and middleware
 let router = Router()
-
-// Setup paths
+let jwtMiddleware = JWTMiddleware(jwtComposer: jwtComposer)
 router.all("/*", middleware: BodyParser())
 router.all("/*", middleware: AllRemoteOriginMiddleware())
 router.all("/*", middleware: LoggerMiddleware())
@@ -54,6 +53,7 @@ router.options("/*", handler: handlers.getOptions)
 
 // GET
 router.get("/*", middleware: CheckRequestMiddleware(method: .get))
+router.get("/*", middleware: jwtMiddleware)
 router.get("/profile", handler: handlers.getProfile)
 router.get("/logout", handler: handlers.logout)
 
@@ -63,6 +63,7 @@ router.post("/login", handler: handlers.login)
 
 // PUT
 router.put("/*", middleware: CheckRequestMiddleware(method: .put))
+router.put("/*", middleware: jwtMiddleware)
 router.put("/profile", handler: handlers.updateProfile)
 router.put("/favorites", handler: handlers.updateFavorites)
 

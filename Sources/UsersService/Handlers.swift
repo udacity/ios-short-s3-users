@@ -34,6 +34,7 @@ public class Handlers {
 
     public func getProfile(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
         // TODO: Add implementation.
+        Log.info("passed all middleware checks")
     }
 
     public func logout(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
@@ -93,9 +94,8 @@ public class Handlers {
                 "iss": "http://gamenight.udacity.com",
                 "exp": Date().append(months: 1).timeIntervalSince1970,
                 "sub": "users microservice",
-                "new": isNewUser
             ]) {
-                try response.send(json: JSON(["jwt": jwt, "id": id])).status(.OK).end()
+                try response.send(json: JSON(["jwt": jwt, "id": id, "new_user": isNewUser])).status(.OK).end()
             } else {
                 Log.error("could not create signed jwt")
                 try response.status(.internalServerError).end()

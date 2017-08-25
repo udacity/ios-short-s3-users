@@ -1,5 +1,6 @@
 import Kitura
 import LoggerAPI
+import SwiftyJSON
 
 // MARK: - CheckRequestMiddleware: RouterMiddleware
 
@@ -22,11 +23,12 @@ public class CheckRequestMiddleware: RouterMiddleware {
             if request.method == method {
                 next()
             } else {
-                Log.error("Request method \(request.method) doesn't match expectation")
-                try response.status(.badRequest).end()
+                Log.error("request method \(request.method) doesn't match expectation")
+                try response.send(json: JSON(["message": "request method \(request.method) doesn't match \(method)"]))
+                            .status(.badRequest).end()
             }
         } catch {
-            Log.error("Failed to send response")
+            Log.error("failed to send response")
         }
     }
 }
