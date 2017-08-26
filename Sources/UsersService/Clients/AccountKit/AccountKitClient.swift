@@ -52,7 +52,7 @@ public class AccountKitClient {
                     try completion(nil, AccountKitClientError.networkError)
                 }
             } catch {
-                Log.error("unable to parse response for getAccessToken")
+                Log.error("unable to parse response for getAccessToken \(error.localizedDescription)")
                 return
             }
         }

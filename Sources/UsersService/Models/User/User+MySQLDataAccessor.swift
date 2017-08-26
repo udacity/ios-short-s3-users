@@ -1,11 +1,12 @@
 import MySQL
+import LoggerAPI
 
 // MARK: - UserMySQLDataAccessorProtocol
 
 public protocol UserMySQLDataAccessorProtocol {
     func getUsers(withID id: String) throws -> [User]?
     func getUsers() throws -> [User]?
-    func insertStubUser(withID id: String) throws -> Bool
+    func upsertStubUser(_ user: User) throws -> Bool
 }
 
 // MARK: - UserMySQLDataAccessor: UserMySQLDataAccessorProtocol
@@ -27,7 +28,7 @@ public class UserMySQLDataAccessor: UserMySQLDataAccessorProtocol {
     public func getUsers(withID id: String) throws -> [User]? {
         let selectUser = MySQLQueryBuilder()
                 .select(fields: ["id", "name", "location", "photo_url", "created_at", "updated_at"], table: "users")
-                .wheres(statement: "WHERE Id=?", parameters: id)
+                .wheres(statement: "Id=?", parameters: id)
 
         let result = try execute(builder: selectUser)
         let users = result.toUsers()
@@ -43,9 +44,15 @@ public class UserMySQLDataAccessor: UserMySQLDataAccessorProtocol {
         return (users.count == 0) ? nil : users
     }
 
-    // Insert a stub user with only the id. If the user already exists, return false.
-    public func insertStubUser(withID id: String) throws -> Bool {
-        return true
+    // Upsert a stub user. If the user already exists, then nothing is updated and false is returned.
+    public func upsertStubUser(_ user: User) throws -> Bool {
+        let upsertUser = MySQLQueryBuilder()
+                .upsert(data: user.toMySQLRow(), table: "users")
+
+        Log.info("\(upsertUser.build())")
+        let result = try execute(builder: upsertUser)
+        Log.info("\(result.affectedRows)")
+        return result.affectedRows > 0
     }
 
     // MARK: Utility

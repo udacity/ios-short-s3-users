@@ -11,7 +11,7 @@ public extension MySQLResultProtocol {
         var users = [User]()
 
         while case let row? = self.nextResult() {
-
+            
             var user = User()
 
             user.id = row["id"] as? Int

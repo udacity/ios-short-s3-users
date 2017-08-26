@@ -36,7 +36,6 @@ public class JWTMiddleware: RouterMiddleware {
         }
 
         do {
-
             let jwt = try jwtComposer.getVerifiedJWTFromSignedToken(signedJWTToken)
             try jwtComposer.verifyReservedClaimsForPayload(jwt.payload, iss: "http://gamenight.udacity.com", sub: "users microservice")
             try jwtComposer.verifyPrivateClaimsForPayload(jwt.payload) { payload in
@@ -44,35 +43,35 @@ public class JWTMiddleware: RouterMiddleware {
                 var invalidClaims = [String]()
 
                 guard let perms = payload["perms"] as? String else {
-                    Log.info("permission denied; perms claim is missing")
+                    Log.debug("permission denied; perms claim is missing")
                     return ["perms"]
                 }
 
                 for permission in permissions {
                     if perms.contains("\(permission.rawValue)") {
-                        Log.info("permission granted: \(permission.rawValue)")
+                        Log.debug("permission granted: \(permission.rawValue)")
                         return []
                     }
                 }
 
                 if perms.contains("admin") {
-                    Log.info("permission granted: admin")
+                    Log.debug("permission granted: admin")
                 } else {
-                    Log.info("permission denied; need one of these \(permissions)")
+                    Log.debug("permission denied; need one of these \(permissions)")
                     invalidClaims.append("perms")
                 }
 
                 return invalidClaims
             }
-
+            request.userInfo["user_id"] = jwt.payload["user"]
         } catch JWTError.missingPublicKey {
             sendResponse(response, withStatusCode: .internalServerError, withMessage: "public key is nil")
         } catch JWTError.cannotCreateJWT {
-            sendResponse(response, withStatusCode: .internalServerError, withMessage: "cannot create JWT")
+            sendResponse(response, withStatusCode: .internalServerError, withMessage: "cannot create jwt")
         } catch JWTError.cannotVerifyAlgAndKey {
             sendResponse(response, withStatusCode: .badRequest, withMessage: "cannot verify jwt alg and key")
         } catch JWTError.invalidPayload(let message) {
-            sendResponse(response, withStatusCode: .badRequest, withMessage: "invalid payload: \(message)")
+            sendResponse(response, withStatusCode: .badRequest, withMessage: "invalid jwt payload: \(message)")
         } catch {
             sendResponse(response, withStatusCode: .internalServerError, withMessage: "failed to verify JWT")
         }
@@ -100,7 +99,7 @@ public class JWTMiddleware: RouterMiddleware {
         let authHeaderComponents = authHeader.components(separatedBy: " ")
 
         if authHeaderComponents.count < 2 || authHeaderComponents[0] != "Bearer" {
-            Log.error("auth header is invalid; use format 'Authorization: Bearer [jwt]'")
+            Log.error("auth header is invalid; use format 'Authorization: Bearer [signed-jwt]'")
             return nil
         }
 

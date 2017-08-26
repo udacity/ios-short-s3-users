@@ -33,24 +33,11 @@ public class Handlers {
     // MARK: GET
 
     public func getProfile(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
-        // TODO: Add implementation.
-        Log.info("passed all middleware checks")
-    }
-
-    public func logout(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
-        // TODO: Add implementation.
-    }
-
-    public func getUsers(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
-
-        let id = request.parameters["id"]
 
         var users: [User]?
 
-        if let id = id {
+        if let id = request.userInfo["user_id"] as? String {
             users = try dataAccessor.getUsers(withID: id)
-        } else {
-            users = try dataAccessor.getUsers()
         }
 
         if users == nil {
@@ -59,6 +46,10 @@ public class Handlers {
         }
 
         try response.send(json: users!.toJSON()).status(.OK).end()
+    }
+
+    public func logout(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+        // TODO: Add implementation.
     }
 
     // MARK: POST
@@ -87,8 +78,9 @@ public class Handlers {
                                 .status(.internalServerError).end()
                     return
             }
-
-            let isNewUser = try self.dataAccessor.insertStubUser(withID: id)
+            
+            let stubUser = User(id: Int(id), name: nil, location: nil, photoURL: nil, createdAt: nil, updatedAt: nil)
+            let isNewUser = try self.dataAccessor.upsertStubUser(stubUser)
 
             do {
                 let jwt = try self.jwtComposer.createSignedTokenWithPayload([

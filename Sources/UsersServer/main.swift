@@ -34,11 +34,11 @@ let accountKitClient = AccountKitClient(
 
 // TODO: Use a service like S3 to deliver keys instead of injecting environment variables
 // Remove extra backslash characters (extra backslashes are added to keys when injecting)
-let privateKeyClean = env["PRIVATE_KEY"]?.replacingOccurrences(of: "\\n", with: "\n")
-let publicKeyClean = env["PUBLIC_KEY"]?.replacingOccurrences(of: "\\n", with: "\n")
-
 // Create JWT composer
-let jwtComposer = JWTComposer(privateKey: privateKeyClean, publicKey: publicKeyClean)
+let jwtComposer = JWTComposer(
+    privateKey: env["PRIVATE_KEY"]?.replacingOccurrences(of: "\\n", with: "\n"),
+    publicKey: env["PUBLIC_KEY"]?.replacingOccurrences(of: "\\n", with: "\n")
+)
 
 // Create handlers
 let handlers = Handlers(dataAccessor: dataAccessor, accountKitClient: accountKitClient, jwtComposer: jwtComposer)
