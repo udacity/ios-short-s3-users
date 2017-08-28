@@ -7,7 +7,7 @@ import PerfectCrypto
 // MARK: - Permission
 
 public enum Permission: String {
-    case usersProfile, usersFull, activities, events, friends, admin
+    case usersProfile, usersAll, activities, events, friends, admin
 }
 
 // MARK: - JWTMiddleware: RouterMiddleware

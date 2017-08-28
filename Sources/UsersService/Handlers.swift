@@ -79,7 +79,14 @@ public class Handlers {
                     return
             }
 
-            let stubUser = User(id: id, name: nil, location: nil, photoURL: nil, createdAt: nil, updatedAt: nil)
+            let stubUser = User(
+                id: id,
+                name: nil,
+                location: nil,
+                photoURL: nil,
+                favoriteActivities: nil,
+                createdAt: nil, updatedAt: nil)
+
             let isNewUser = try self.dataAccessor.upsertStubUser(stubUser)
 
             do {
@@ -122,8 +129,8 @@ public class Handlers {
             name: json["name"].string,
             location: json["location"].string,
             photoURL: json["photo_url"].string,
-            createdAt: nil,
-            updatedAt: nil)
+            favoriteActivities: nil,
+            createdAt: nil, updatedAt: nil)
 
         let missingParameters = updateUser.validateParameters(
             ["id", "name", "location", "photo_url"])

@@ -52,7 +52,7 @@ router.options("/*", handler: handlers.getOptions)
 
 // GET
 router.get("/*", middleware: CheckRequestMiddleware(method: .get))
-router.get("/*", middleware: JWTMiddleware(jwtComposer: jwtComposer, permissions: [.usersProfile, .usersFull]))
+router.get("/*", middleware: JWTMiddleware(jwtComposer: jwtComposer, permissions: [.usersProfile, .usersAll]))
 router.get("/profile", handler: handlers.getProfile)
 router.get("/logout", handler: handlers.logout)
 
@@ -62,9 +62,9 @@ router.post("/login", handler: handlers.login)
 
 // PUT
 router.put("/*", middleware: CheckRequestMiddleware(method: .put))
-router.put("/profile", middleware: JWTMiddleware(jwtComposer: jwtComposer, permissions: [.usersProfile, .usersFull]))
+router.put("/profile", middleware: JWTMiddleware(jwtComposer: jwtComposer, permissions: [.usersProfile, .usersAll]))
 router.put("/profile", handler: handlers.updateProfile)
-router.put("/favorites", middleware: JWTMiddleware(jwtComposer: jwtComposer, permissions: [.usersFull]))
+router.put("/favorites", middleware: JWTMiddleware(jwtComposer: jwtComposer, permissions: [.usersAll]))
 router.put("/favorites", handler: handlers.updateFavorites)
 
 // Add an HTTP server and connect it to the router

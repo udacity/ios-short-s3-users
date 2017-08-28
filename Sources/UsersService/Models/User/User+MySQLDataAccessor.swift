@@ -29,18 +29,26 @@ public class UserMySQLDataAccessor: UserMySQLDataAccessorProtocol {
     public func getUsers(withID id: String) throws -> [User]? {
         let selectUser = MySQLQueryBuilder()
                 .select(fields: ["id", "name", "location", "photo_url", "created_at", "updated_at"], table: "users")
-                .wheres(statement: "Id=?", parameters: id)
+        let selectFavorites = MySQLQueryBuilder()
+                .select(fields: ["user_id", "activity_id"], table: "favorites")
 
-        let result = try execute(builder: selectUser)
+        let selectQuery = selectUser.wheres(statement:"id=?", parameters: id)
+            .join(builder: selectFavorites, from: "id", to: "user_id", type: .LeftJoin)
+
+        let result = try execute(builder: selectQuery)
         let users = result.toUsers()
         return (users.count == 0) ? nil : users
     }
 
     public func getUsers() throws -> [User]? {
-        let selectUsers = MySQLQueryBuilder()
+        let selectUser = MySQLQueryBuilder()
                 .select(fields: ["id", "name", "location", "photo_url", "created_at", "updated_at"], table: "users")
+        let selectFavorites = MySQLQueryBuilder()
+                .select(fields: ["user_id", "activity_id"], table: "favorites")
 
-        let result = try execute(builder: selectUsers)
+        let selectQuery = selectUser.join(builder: selectFavorites, from: "id", to: "user_id", type: .LeftJoin)
+
+        let result = try execute(builder: selectQuery)
         let users = result.toUsers()
         return (users.count == 0) ? nil : users
     }
@@ -58,7 +66,7 @@ public class UserMySQLDataAccessor: UserMySQLDataAccessorProtocol {
         let updateQuery = MySQLQueryBuilder()
                 .update(data: user.toMySQLRow(), table: "users")
                 .wheres(statement: "Id=?", parameters: "\(user.id!)")
-        
+
         let result = try execute(builder: updateQuery)
         return result.affectedRows > 0
     }
