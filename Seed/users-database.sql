@@ -26,7 +26,7 @@ ALTER DATABASE `game_night` CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
 DROP TABLE IF EXISTS `users`;
 
 CREATE TABLE `users` (
-  `id` bigint NOT NULL,
+  `id` varchar(50) NOT NULL,
   `name` varchar(50),
   `location` varchar(200),
   `photo_url` text,
@@ -44,10 +44,10 @@ ALTER TABLE `users` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
 INSERT INTO `users` VALUES
-(1,'Jarrod Parkes','Huntsville, AL','https://avatars0.githubusercontent.com/u/1331063?v=4&s=460','2017-07-24 20:43:51','2017-07-24 20:43:51'),
-(2,'Nic Jackson','London, UK','https://avatars2.githubusercontent.com/u/773533?v=4&s=400','2017-07-24 20:43:51','2017-07-24 20:43:51'),
-(3,'Gabrielle Miller-Messner','Oakland, CA','','2017-07-24 20:43:51','2017-07-24 20:43:51'),
-(4,'Kate Rotondo','San Francisco, CA','','2017-07-24 20:43:51','2017-07-24 20:43:51');
+('1','Jarrod Parkes','Huntsville, AL','https://avatars0.githubusercontent.com/u/1331063?v=4&s=460','2017-07-24 20:43:51','2017-07-24 20:43:51'),
+('2','Nic Jackson','London, UK','https://avatars2.githubusercontent.com/u/773533?v=4&s=400','2017-07-24 20:43:51','2017-07-24 20:43:51'),
+('3','Gabrielle Miller-Messner','Oakland, CA','','2017-07-24 20:43:51','2017-07-24 20:43:51'),
+('4','Kate Rotondo','San Francisco, CA','','2017-07-24 20:43:51','2017-07-24 20:43:51');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -59,7 +59,7 @@ DROP TABLE IF EXISTS `favorites`;
 
 CREATE TABLE `favorites` (
   `id` int(20) unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` bigint NOT NULL,
+  `user_id` varchar(50) NOT NULL,
   `activity_id` int(6) unsigned NOT NULL,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -75,9 +75,9 @@ ALTER TABLE `favorites` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
 LOCK TABLES `favorites` WRITE;
 /*!40000 ALTER TABLE `favorites` DISABLE KEYS */;
 INSERT INTO `favorites` VALUES
-(1,1,4,'2017-07-24 20:43:51','2017-07-24 20:43:51'),
-(2,1,5,'2017-07-24 20:43:51','2017-07-24 20:43:51'),
-(3,2,6,'2017-07-24 20:43:51','2017-07-24 20:43:51');
+(1,'1',4,'2017-07-24 20:43:51','2017-07-24 20:43:51'),
+(2,'1',5,'2017-07-24 20:43:51','2017-07-24 20:43:51'),
+(3,'2',6,'2017-07-24 20:43:51','2017-07-24 20:43:51');
 /*!40000 ALTER TABLE `favorites` ENABLE KEYS */;
 UNLOCK TABLES;
 
