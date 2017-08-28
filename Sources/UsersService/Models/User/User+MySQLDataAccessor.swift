@@ -7,6 +7,7 @@ public protocol UserMySQLDataAccessorProtocol {
     func getUsers(withID id: String) throws -> [User]?
     func getUsers() throws -> [User]?
     func upsertStubUser(_ user: User) throws -> Bool
+    func updateUser(_ user: User) throws -> Bool
 }
 
 // MARK: - UserMySQLDataAccessor: UserMySQLDataAccessorProtocol
@@ -50,6 +51,15 @@ public class UserMySQLDataAccessor: UserMySQLDataAccessorProtocol {
                 .upsert(data: user.toMySQLRow(), table: "users")
 
         let result = try execute(builder: upsertUser)
+        return result.affectedRows > 0
+    }
+
+    public func updateUser(_ user: User) throws -> Bool {
+        let updateQuery = MySQLQueryBuilder()
+                .update(data: user.toMySQLRow(), table: "users")
+                .wheres(statement: "Id=?", parameters: "\(user.id!)")
+        
+        let result = try execute(builder: updateQuery)
         return result.affectedRows > 0
     }
 

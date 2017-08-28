@@ -45,8 +45,26 @@ extension User {
         data["id"] = id
         data["name"] = name
         data["location"] = location
-        data["photoURL"] = photoURL
+        data["photo_url"] = photoURL
 
         return data
+    }
+}
+
+// MARK: - User (Validate)
+
+extension User {
+    public func validateParameters(_ parameters: [String]) -> [String] {
+        var missingParameters = [String]()
+        let mirror = Mirror(reflecting: self)
+
+        for (name, value) in mirror.children {
+            guard let name = name, parameters.contains(name) else { continue }
+            if "\(value)" == "nil" {
+                missingParameters.append("\(name)")
+            }
+        }
+
+        return missingParameters
     }
 }

@@ -101,7 +101,47 @@ public class Handlers {
     // MARK: PUT
 
     public func updateProfile(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
-        // TODO: Add implementation.
+
+        guard let id = request.userInfo["user_id"] as? String else {
+            Log.error("could not get user_id from jwt")
+            try response.send(json: JSON(["message": "could not get user_id from jwt"]))
+                        .status(.internalServerError).end()
+            return
+        }
+
+        guard let body = request.body, case let .json(json) = body else {
+            Log.error("body contains invalid JSON")
+            Log.info("\(String(describing: request.body))")
+            try response.send(json: JSON(["message": "body is missing JSON or JSON is invalid"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        let updateUser = User(
+            id: id,
+            name: json["name"].string,
+            location: json["location"].string,
+            photoURL: json["photo_url"].string,
+            createdAt: nil,
+            updatedAt: nil)
+
+        let missingParameters = updateUser.validateParameters(
+            ["id", "name", "location", "photo_url"])
+
+        if missingParameters.count != 0 {
+            Log.error("parameters missing \(missingParameters)")
+            try response.send(json: JSON(["message": "parameters missing \(missingParameters)"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        let success = try dataAccessor.updateUser(updateUser)
+
+        if success {
+            try response.send(json: JSON(["message": "user updated"])).status(.OK).end()
+        }
+
+        try response.status(.notModified).end()
     }
 
     public func updateFavorites(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
