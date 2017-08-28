@@ -135,6 +135,7 @@ definitions:
       - $ref: '#/definitions/UpdateProfile'
       - required:
         - id
+        - favoriteActivities
         - created_at
         - updated_at
         properties:
@@ -143,6 +144,12 @@ definitions:
             description: ID of user.
             readOnly: true
             default: "1"
+          favoriteActivities:
+            type: array
+            items:
+              type: string
+              description: ID of activity.
+              default: "4"
           created_at:
             type: string
             description: Date event was created.
