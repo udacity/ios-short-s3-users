@@ -5,7 +5,7 @@ import LoggerAPI
 // MARK: - User
 
 public struct User {
-    public var id: Int?
+    public var id: String?
     public var name: String?
     public var location: String?
     public var photoURL: String?

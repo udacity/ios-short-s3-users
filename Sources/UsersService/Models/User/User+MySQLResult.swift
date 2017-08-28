@@ -11,10 +11,10 @@ public extension MySQLResultProtocol {
         var users = [User]()
 
         while case let row? = self.nextResult() {
-            
+
             var user = User()
 
-            user.id = row["id"] as? Int
+            user.id = row["id"] as? String
             user.name = row["name"] as? String
             user.location = row["location"] as? String
             user.photoURL = row["photo_url"] as? String

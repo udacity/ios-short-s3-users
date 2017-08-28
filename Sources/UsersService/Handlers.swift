@@ -78,8 +78,8 @@ public class Handlers {
                                 .status(.internalServerError).end()
                     return
             }
-            
-            let stubUser = User(id: Int(id), name: nil, location: nil, photoURL: nil, createdAt: nil, updatedAt: nil)
+
+            let stubUser = User(id: id, name: nil, location: nil, photoURL: nil, createdAt: nil, updatedAt: nil)
             let isNewUser = try self.dataAccessor.upsertStubUser(stubUser)
 
             do {

@@ -49,9 +49,7 @@ public class UserMySQLDataAccessor: UserMySQLDataAccessorProtocol {
         let upsertUser = MySQLQueryBuilder()
                 .upsert(data: user.toMySQLRow(), table: "users")
 
-        Log.info("\(upsertUser.build())")
         let result = try execute(builder: upsertUser)
-        Log.info("\(result.affectedRows)")
         return result.affectedRows > 0
     }
 
