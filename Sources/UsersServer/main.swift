@@ -53,6 +53,7 @@ router.options("/*", handler: handlers.getOptions)
 // GET
 router.get("/*", middleware: CheckRequestMiddleware(method: .get))
 router.get("/*", middleware: JWTMiddleware(jwtComposer: jwtComposer, permissions: [.usersProfile, .usersAll]))
+router.get("/users", handler: handlers.getUsers)
 router.get("/profile", handler: handlers.getProfile)
 router.get("/logout", handler: handlers.logout)
 

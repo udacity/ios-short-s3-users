@@ -5,7 +5,7 @@ import LoggerAPI
 
 public protocol UserMySQLDataAccessorProtocol {
     func getUsers(withID id: String) throws -> [User]?
-    func getUsers() throws -> [User]?
+    func getUsers(withIDs ids: [String]) throws -> [User]?
     func upsertStubUser(_ user: User) throws -> Bool
     func updateUser(_ user: User) throws -> Bool
 }
@@ -40,14 +40,14 @@ public class UserMySQLDataAccessor: UserMySQLDataAccessorProtocol {
         return (users.count == 0) ? nil : users
     }
 
-    public func getUsers() throws -> [User]? {
+    public func getUsers(withIDs ids: [String]) throws -> [User]? {
         let selectUser = MySQLQueryBuilder()
                 .select(fields: ["id", "name", "location", "photo_url", "created_at", "updated_at"], table: "users")
         let selectFavorites = MySQLQueryBuilder()
                 .select(fields: ["user_id", "activity_id"], table: "favorites")
-
-        let selectQuery = selectUser.join(builder: selectFavorites, from: "id", to: "user_id", type: .LeftJoin)
-
+        let selectQuery = selectUser.wheres(statement: "id IN (?)", parameters: ids)
+            .join(builder: selectFavorites, from: "id", to: "user_id", type: .LeftJoin)
+        
         let result = try execute(builder: selectQuery)
         let users = result.toUsers()
         return (users.count == 0) ? nil : users

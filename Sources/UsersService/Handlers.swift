@@ -32,6 +32,34 @@ public class Handlers {
 
     // MARK: GET
 
+    public func getUsers(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+
+        guard let body = request.body, case let .json(json) = body else {
+            Log.error("body contains invalid JSON")
+            try response.send(json: JSON(["message": "body is missing JSON or JSON is invalid"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        let ids = json["ids"].arrayValue.map({$0.stringValue})
+
+        guard ids.count > 0 else {
+            Log.error("request body is missing array of user ids")
+            try response.send(json: JSON(["message": "request body is missing array of user ids"]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        let users = try dataAccessor.getUsers(withIDs: ids)
+
+        if users == nil {
+            try response.status(.notFound).end()
+            return
+        }
+
+        try response.send(json: users!.toJSON()).status(.OK).end()
+    }
+
     public func getProfile(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
         var users: [User]?
