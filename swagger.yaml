@@ -2,8 +2,8 @@ swagger: '2.0'
 
 info:
   version: '1.0.0'
-  title: 'Users'
-  description: 'Microservice for managing users.'
+  title: 'Users Microservice'
+  description: 'Microservice for creating, updating, and authorizing users.'
   contact:
     name: Jarrod Parkes
     email: jarrod@udacity.com
@@ -19,10 +19,92 @@ produces:
   - application/json
 
 paths:
-  /login:
+  /users:
+    get:
+      description: List users.
+      summary: List users.
+      parameters:
+       - name: page_size
+         in: query
+         description: Number of users returned. Limit is 50.
+         type: integer
+       - name: page_number
+         in: query
+         description: Page number.
+         type: integer  
+      responses:
+        200:
+          description: Successful response.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Profile'
+        401:
+          $ref: "#/responses/Unauthorized" 
+      security:
+      - JWT: []
+  /users/search:
+    get:
+      description: List and filter users.
+      summary: List and filter users.
+      parameters:
+       - name: page_size
+         in: query
+         description: Number of users returned. Limit is 50.
+         type: integer
+       - name: page_number
+         in: query
+         description: Page number.
+         type: integer  
+       - name: filter
+         in: body
+         description: Properties for filtering search.
+         schema:
+           type: object
+           properties:
+            id:
+              type: array
+              description: IDs of users to filter.
+              items:
+                type: string
+                default: "3"
+           required:
+              - id 
+      responses:
+        200:
+          description: Successful response.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Profile'
+        401:
+          $ref: "#/responses/Unauthorized"   
+      security:
+      - JWT: []
+  /users/{id}:
+    get:
+      description: Get information about a user.
+      summary: Get information about a user.
+      parameters:
+        - name: id
+          in: path
+          description: ID of user to fetch.
+          required: true
+          type: integer
+          format: int64 
+      responses:
+        200:
+          description: Successful response.
+          schema:
+            $ref: '#/definitions/Profile'
+        401:
+          $ref: "#/responses/Unauthorized" 
+      security:
+      - JWT: []      
+  /users/login:
     post:
-      description: Login user and generate base64 encoded JWT.
-      summary: Login user and generate base64 encoded JWT.
+      description: Login and create an encoded JWT.
+      summary: Login and create an encoded JWT.
       parameters:
        - name: code
          in: query
@@ -38,25 +120,10 @@ paths:
           description: Bad request.
           schema:
             $ref: '#/definitions/Message'
-  /logout:
+  /users/profile:
     get:
-      description: Logout user and invalidate the provided JWT.
-      summary: Logout user and invalidate the provided JWT.
-      responses:
-        200:
-          description: Logout successful.
-          schema:
-            $ref: '#/definitions/Message'
-        401:
-          description: Unauthorized request.
-          schema:
-            $ref: '#/definitions/Message'
-      security:
-      - user_auth: []
-  /profile:
-    get:
-      description: Retrieve the current user's profile.
-      summary: Retrieve the current user's profile.
+      description: Get information about the current user.
+      summary: Get information about the current user.
       responses:
         200:
           description: Successful response.
@@ -67,10 +134,10 @@ paths:
           schema:
             $ref: '#/definitions/Message'
       security:
-      - user_auth: []
+      - JWT: []
     put:
-      description: Update the current user's profile.
-      summary: Update the current user's profile.
+      description: Update information for the current user.
+      summary: Update information for the current user.
       parameters:
         - name: profile
           in: body
@@ -87,10 +154,10 @@ paths:
           description: Unauthorized request.
           schema:
             $ref: '#/definitions/Message'     
-  /favorites:
+  /users/favorites:
     put:
-      description: Add or remove favorites from current user's profile.
-      summary: Add or remove favorites from current user's profile.
+      description: Update the current user's favorite activities.
+      summary: Update the current user's favorite activities.
       parameters:
         - in: body
           name: favorites
@@ -108,7 +175,22 @@ paths:
           schema:
             $ref: '#/definitions/Message'
       security:
-      - user_auth: []
+      - JWT: []
+  /users/logout:
+    get:
+      description: Logout and invalidate the provided JWT.
+      summary: Logout and invalidate the provided JWT.
+      responses:
+        200:
+          description: Logout successful.
+          schema:
+            $ref: '#/definitions/Message'
+        401:
+          description: Unauthorized request.
+          schema:
+            $ref: '#/definitions/Message'
+      security:
+      - JWT: []      
 
 responses:
   NoContent:
@@ -123,10 +205,10 @@ responses:
     description: Unauthorized.
 
 securityDefinitions:
-  user_auth:
+  JWT:
     type: apiKey
-    description: Base64 encoded JWT
-    name: Authorisation bearer
+    description: A Base64-encoded JSON web token.
+    name: "Authorization: Bearer"
     in: header
 
 definitions:
@@ -135,7 +217,7 @@ definitions:
       - $ref: '#/definitions/UpdateProfile'
       - required:
         - id
-        - favoriteActivities
+        - favorite_activities
         - created_at
         - updated_at
         properties:
@@ -144,7 +226,7 @@ definitions:
             description: ID of user.
             readOnly: true
             default: "1"
-          favoriteActivities:
+          favorite_activities:
             type: array
             items:
               type: string
@@ -182,19 +264,21 @@ definitions:
   UpdateFavorite:
     type: object
     properties:
-      activity_ids:
+      add:
         type: array
         items:
           type: string
-          description: ID of activity.
+          description: IDs of activity to favorite.
           default: "4"
-      favorite:
-        type: boolean
-        description: If true, add to favorites. If false, remove from favorites.
-        default: true
+      remove:
+        type: array
+        items:
+          type: string
+          description: IDs of activity to remove from favorites.
+          default: "5"
     required:
-      - activity_ids
-      - favorite
+      - add
+      - remove
   Message:
     type: object
     properties:
