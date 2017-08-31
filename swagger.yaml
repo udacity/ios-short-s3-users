@@ -41,8 +41,6 @@ paths:
               $ref: '#/definitions/Profile'
         401:
           $ref: "#/responses/Unauthorized" 
-      security:
-      - JWT: []
   /users/search:
     get:
       description: List and filter users.
@@ -79,8 +77,6 @@ paths:
               $ref: '#/definitions/Profile'
         401:
           $ref: "#/responses/Unauthorized"   
-      security:
-      - JWT: []
   /users/{id}:
     get:
       description: Get information about a user.
@@ -99,8 +95,6 @@ paths:
             $ref: '#/definitions/Profile'
         401:
           $ref: "#/responses/Unauthorized" 
-      security:
-      - JWT: []      
   /users/login:
     post:
       description: Login and create an encoded JWT.
@@ -153,7 +147,9 @@ paths:
         401:
           description: Unauthorized request.
           schema:
-            $ref: '#/definitions/Message'     
+            $ref: '#/definitions/Message'   
+      security:
+      - JWT: []             
   /users/favorites:
     put:
       description: Update the current user's favorite activities.
@@ -177,7 +173,7 @@ paths:
       security:
       - JWT: []
   /users/logout:
-    get:
+    post:
       description: Logout and invalidate the provided JWT.
       summary: Logout and invalidate the provided JWT.
       responses:
