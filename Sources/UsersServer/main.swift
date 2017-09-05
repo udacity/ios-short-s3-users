@@ -37,12 +37,23 @@ let accountKitClient = AccountKitClient(
     appSecret: env["ACCOUNT_KIT_APP_SECRET"] ?? "ACCOUNT_KIT_APP_SECRET"
 )
 
+// Remove extra backslash characters and surrounding quotes (added when keys are injected)
+func cleanKeyString(_ string: String) -> String {
+    let modifiedString = string.replacingOccurrences(of: "\\n", with: "\n")
+    let startIndex = modifiedString.index(modifiedString.startIndex, offsetBy: 1)
+    let endIndex = modifiedString.index(modifiedString.endIndex, offsetBy: -1)
+    let range = startIndex..<endIndex
+    return modifiedString.substring(with: range)
+}
+
 // FIXME: Use a service like S3 to deliver keys instead of injecting environment variables
-// Remove extra backslash characters (extra backslashes are added to keys when injecting)
+let privateKeyClean = cleanKeyString(env["PRIVATE_KEY"] ?? "")
+let publicKeyClean = cleanKeyString(env["PUBLIC_KEY"] ?? "")
+
 // Create JWT composer
 let jwtComposer = JWTComposer(
-    privateKey: env["PRIVATE_KEY"]?.replacingOccurrences(of: "\\n", with: "\n"),
-    publicKey: env["PUBLIC_KEY"]?.replacingOccurrences(of: "\\n", with: "\n")
+    privateKey: privateKeyClean,
+    publicKey: publicKeyClean
 )
 
 // Create handlers

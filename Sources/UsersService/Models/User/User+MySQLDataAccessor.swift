@@ -27,29 +27,59 @@ public class UserMySQLDataAccessor: UserMySQLDataAccessorProtocol {
     // MARK: Queries
 
     public func getUsers(withIDs ids: [String], pageSize: Int = 10, pageNumber: Int = 1) throws -> [User]? {
-        let selectUser = MySQLQueryBuilder()
-                .select(fields: ["id", "name", "location", "photo_url", "created_at", "updated_at"], table: "users")
-        let selectFavorites = MySQLQueryBuilder()
-                .select(fields: ["user_id", "activity_id"], table: "favorites")
-        let selectQuery = selectUser.wheres(statement: "id IN (?)", parameters: ids)
-            .join(builder: selectFavorites, from: "id", to: "user_id", type: .LeftJoin)
+        let selectUsersIDs = MySQLQueryBuilder()
+            .select(fields: ["id"], table: "users")
+            .wheres(statement:"id IN (?)", parameters: ids)
 
-        let result = try execute(builder: selectQuery)
-        let users = result.toUsers()
+        // Select ids and apply pagination before joins
+        let simpleResults = try execute(builder: selectUsersIDs)
+        simpleResults.seek(offset: cacluateOffset(pageSize: pageSize, pageNumber: pageNumber))
+        let simpleUsers = simpleResults.toUsers(pageSize: pageSize)
+        let newIDs = simpleUsers.map({String($0.id!)!})
+
+        var users = [User]()
+
+        // Once the ids are determind, perform the joins
+        if newIDs.count > 0 {
+            let selectUser = MySQLQueryBuilder()
+                    .select(fields: ["id", "name", "location", "photo_url", "created_at", "updated_at"], table: "users")
+            let selectFavorites = MySQLQueryBuilder()
+                    .select(fields: ["user_id", "activity_id"], table: "favorites")
+            let selectQuery = selectUser.wheres(statement: "id IN (?)", parameters: newIDs)
+                    .join(builder: selectFavorites, from: "id", to: "user_id", type: .LeftJoin)
+
+            let result = try execute(builder: selectQuery)
+            users = result.toUsers()
+        }
+
         return (users.count == 0) ? nil : users
     }
 
     public func getUsers(pageSize: Int = 10, pageNumber: Int = 1) throws -> [User]? {
-        let selectUser = MySQLQueryBuilder()
-                .select(fields: ["id", "name", "location", "photo_url", "created_at", "updated_at"], table: "users")
-        let selectFavorites = MySQLQueryBuilder()
-                .select(fields: ["user_id", "activity_id"], table: "favorites")
-        let selectQuery = selectUser.join(builder: selectFavorites, from: "id", to: "user_id", type: .LeftJoin)
+        let selectUsersIDs = MySQLQueryBuilder()
+            .select(fields: ["id"], table: "users")
 
-        let result = try execute(builder: selectQuery)
-        result.seek(offset: cacluateOffset(pageSize: pageSize, pageNumber: pageNumber))
+        // Select ids and apply pagination before joins
+        let simpleResults = try execute(builder: selectUsersIDs)
+        simpleResults.seek(offset: cacluateOffset(pageSize: pageSize, pageNumber: pageNumber))
+        let simpleUsers = simpleResults.toUsers(pageSize: pageSize)
+        let ids = simpleUsers.map({String($0.id!)!})
 
-        let users = result.toUsers(pageSize: pageSize)
+        var users = [User]()
+
+        // Once the ids are determind, perform the joins
+        if ids.count > 0 {
+            let selectUser = MySQLQueryBuilder()
+                    .select(fields: ["id", "name", "location", "photo_url", "created_at", "updated_at"], table: "users")
+            let selectFavorites = MySQLQueryBuilder()
+                    .select(fields: ["user_id", "activity_id"], table: "favorites")
+            let selectQuery = selectUser.wheres(statement: "id IN (?)", parameters: ids)
+                    .join(builder: selectFavorites, from: "id", to: "user_id", type: .LeftJoin)
+
+            let result = try execute(builder: selectQuery)
+            users = result.toUsers()
+        }
+
         return (users.count == 0) ? nil : users
     }
 
@@ -66,7 +96,7 @@ public class UserMySQLDataAccessor: UserMySQLDataAccessorProtocol {
         let updateQuery = MySQLQueryBuilder()
                 .update(data: user.toMySQLRow(), table: "users")
                 .wheres(statement: "Id=?", parameters: "\(user.id!)")
-        
+
         let result = try execute(builder: updateQuery)
         return result.affectedRows > 0
     }

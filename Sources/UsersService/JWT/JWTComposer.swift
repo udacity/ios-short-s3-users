@@ -8,7 +8,7 @@ import PerfectCrypto
 public enum JWTError: Error {
     case missingPrivateKey
     case missingPublicKey
-    case cannotCreateJWT
+    case cannotCreateJWT(String)
     case cannotSignJWT(String)
     case cannotVerifyAlgAndKey
     case invalidPayload(String)
@@ -38,15 +38,15 @@ public class JWTComposer {
         }
 
         guard let jwt = JWTCreator(payload: payload) else {
-            throw JWTError.cannotCreateJWT
+            throw JWTError.cannotCreateJWT("Cannot initialize JWTCreator.")
         }
 
         do {
             let privateKeyAsPem = try PEMKey(source: privateKey)
             let signedToken = try jwt.sign(alg: .rs256, key: privateKeyAsPem)
             return signedToken
-        } catch is KeyError {
-            throw JWTError.cannotCreateJWT
+        } catch let error as KeyError {
+            throw JWTError.cannotCreateJWT(error.msg)
         } catch JWT.Error.signingError(let message) {
             throw JWTError.cannotSignJWT(message)
         } catch {
@@ -54,15 +54,17 @@ public class JWTComposer {
         }
     }
 
-    // MARK: Check Token
+    // MARK: Get Verifier
 
     public func getJWTVerifierWithSignedToken(_ signedToken: String) throws -> JWTVerifier {
         guard let jwtVerifier = JWTVerifier(signedToken) else {
-            throw JWTError.cannotCreateJWT
+            throw JWTError.cannotCreateJWT("Cannot initialize JWTVerifier.")
         }
 
         return jwtVerifier
     }
+
+    // MARK: Check Token
 
     public func verifyAlgorithmAndKeyForJWT(_ jwt: JWTVerifier) throws {
         guard let publicKey = publicKey else {

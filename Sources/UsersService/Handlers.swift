@@ -201,9 +201,7 @@ public class Handlers {
                         .status(.badRequest).end()
             return
         }
-
-        Log.info("\(updateUser)")
-
+        
         let success = try dataAccessor.updateUser(updateUser)
 
         if success {
