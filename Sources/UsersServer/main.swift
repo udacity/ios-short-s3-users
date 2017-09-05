@@ -25,20 +25,42 @@ let pool = MySQLConnectionPool(connectionString: connectionString, poolSize: 10,
 // Create data accessor (uses pool to get connections and access data!)
 let dataAccessor = UserMySQLDataAccessor(pool: pool)
 
+// Check connection to database
+if !dataAccessor.isConnected() {
+    Log.error("Unable to connect to MySQL database: \(connectionString)")
+}
+
 // Create AccountKit client
 let accountKitClient = AccountKitClient(
-    session: URLSession(configuration: URLSessionConfiguration.default),
+    session: URLSession(configuration: .default),
     appID: env["FACEBOOK_APP_ID"] ?? "FACEBOOK_APP_ID",
     appSecret: env["ACCOUNT_KIT_APP_SECRET"] ?? "ACCOUNT_KIT_APP_SECRET"
 )
 
+// Remove extra backslash characters and surrounding quotes (added when keys are injected)
+func cleanKeyString(_ string: String) -> String {
+    let modifiedString = string.replacingOccurrences(of: "\\n", with: "\n")
+    let startIndex = modifiedString.index(modifiedString.startIndex, offsetBy: 1)
+    let endIndex = modifiedString.index(modifiedString.endIndex, offsetBy: -1)
+    let range = startIndex..<endIndex
+    return modifiedString.substring(with: range)
+}
+
+// FIXME: Use a service like S3 to deliver keys instead of injecting environment variables
+let privateKeyClean = cleanKeyString(env["PRIVATE_KEY"] ?? "")
+let publicKeyClean = cleanKeyString(env["PUBLIC_KEY"] ?? "")
+
+// Create JWT composer
+let jwtComposer = JWTComposer(
+    privateKey: privateKeyClean,
+    publicKey: publicKeyClean
+)
+
 // Create handlers
-let handlers = Handlers(dataAccessor: dataAccessor, accountKitClient: accountKitClient)
+let handlers = Handlers(dataAccessor: dataAccessor, accountKitClient: accountKitClient, jwtComposer: jwtComposer)
 
-// Create router
+// Create router and middleware
 let router = Router()
-
-// Setup paths
 router.all("/*", middleware: BodyParser())
 router.all("/*", middleware: AllRemoteOriginMiddleware())
 router.all("/*", middleware: LoggerMiddleware())
@@ -46,17 +68,23 @@ router.options("/*", handler: handlers.getOptions)
 
 // GET
 router.get("/*", middleware: CheckRequestMiddleware(method: .get))
-router.get("/profile", handler: handlers.getProfile)
-router.get("/logout", handler: handlers.logout)
+router.get("/*", middleware: JWTMiddleware(jwtComposer: jwtComposer, permissions: [.usersProfile, .usersAll]))
+router.get("/users/search", handler: handlers.searchUsers)
+router.get("/users/profile", handler: handlers.getCurrentUser)
+router.get("/users/:id", handler: handlers.getUsers)
+router.get("/users", handler: handlers.getUsers)
 
 // POST
 router.post("/*", middleware: CheckRequestMiddleware(method: .post))
-router.post("/login", handler: handlers.login)
+router.post("/users/login", handler: handlers.login)
+router.post("/users/logout", handler: handlers.logout)
 
 // PUT
 router.put("/*", middleware: CheckRequestMiddleware(method: .put))
-router.put("/profile", handler: handlers.updateProfile)
-router.put("/favorites", handler: handlers.updateFavorites)
+router.put("/users/profile", middleware: JWTMiddleware(jwtComposer: jwtComposer, permissions: [.usersProfile, .usersAll]))
+router.put("/users/profile", handler: handlers.updateProfile)
+router.put("/users/favorites", middleware: JWTMiddleware(jwtComposer: jwtComposer, permissions: [.usersAll]))
+router.put("/users/favorites", handler: handlers.updateFavorites)
 
 // Add an HTTP server and connect it to the router
 Kitura.addHTTPServer(onPort: 8080, with: router)

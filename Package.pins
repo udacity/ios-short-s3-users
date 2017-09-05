@@ -5,7 +5,7 @@
       "package": "CCurl",
       "reason": null,
       "repositoryURL": "https://github.com/IBM-Swift/CCurl.git",
-      "version": "0.4.0"
+      "version": "0.4.1"
     },
     {
       "package": "CEpoll",
@@ -14,10 +14,16 @@
       "version": "0.1.0"
     },
     {
+      "package": "COpenSSL",
+      "reason": null,
+      "repositoryURL": "https://github.com/PerfectlySoft/Perfect-COpenSSL-Linux.git",
+      "version": "2.0.4"
+    },
+    {
       "package": "HeliumLogger",
       "reason": null,
       "repositoryURL": "https://github.com/IBM-Swift/HeliumLogger.git",
-      "version": "1.7.0"
+      "version": "1.7.1"
     },
     {
       "package": "Kitura",
@@ -35,25 +41,49 @@
       "package": "Kitura-TemplateEngine",
       "reason": null,
       "repositoryURL": "https://github.com/IBM-Swift/Kitura-TemplateEngine.git",
-      "version": "1.7.1"
+      "version": "1.7.2"
+    },
+    {
+      "package": "LinuxBridge",
+      "reason": null,
+      "repositoryURL": "https://github.com/PerfectlySoft/Perfect-LinuxBridge.git",
+      "version": "2.0.2"
     },
     {
       "package": "LoggerAPI",
       "reason": null,
       "repositoryURL": "https://github.com/IBM-Swift/LoggerAPI.git",
-      "version": "1.7.0"
+      "version": "1.7.1"
     },
     {
       "package": "MySQL",
       "reason": null,
       "repositoryURL": "https://github.com/nicholasjackson/swift-mysql.git",
-      "version": "1.4.0"
+      "version": "1.7.2"
     },
     {
       "package": "OpenSSL",
       "reason": null,
       "repositoryURL": "https://github.com/IBM-Swift/OpenSSL.git",
       "version": "0.3.6"
+    },
+    {
+      "package": "PerfectCrypto",
+      "reason": null,
+      "repositoryURL": "https://github.com/PerfectlySoft/Perfect-Crypto.git",
+      "version": "1.1.1"
+    },
+    {
+      "package": "PerfectLib",
+      "reason": null,
+      "repositoryURL": "https://github.com/PerfectlySoft/PerfectLib.git",
+      "version": "2.0.11"
+    },
+    {
+      "package": "PerfectThread",
+      "reason": null,
+      "repositoryURL": "https://github.com/PerfectlySoft/Perfect-Thread.git",
+      "version": "2.0.12"
     },
     {
       "package": "Signals",

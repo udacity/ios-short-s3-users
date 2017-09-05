@@ -1,17 +1,14 @@
+// https://developers.facebook.com/docs/accountkit/graphapi
+
 import Foundation
 import LoggerAPI
-
-public typealias HTTPResult = (Data?, Error?) -> Void
 
 // MARK: - AccountKitClientError: Error
 
 enum AccountKitClientError: Error {
-    case networkError
+    case networkError(String)
     case customError(String)
 }
-
-// https://developers.facebook.com/docs/accountkit/graphapi
-// see "Retrieving User Access Tokens with an Authorization Code"
 
 // MARK: - AccountKitClient
 
@@ -33,32 +30,33 @@ public class AccountKitClient {
 
     // MARK: Requests
 
-    // exchange user auth code for user access token
-    public func getAccessToken(withAuthCode: String, completion: @escaping HTTPResult) {
+    public func getAccessToken(withAuthCode: String, completion: @escaping (Data?, Error?) throws -> Void) {
 
+        // Exchange user auth code for user access token
         guard let url = getURLWithPath("/access_token", withParameters: [
             "grant_type": "authorization_code",
             "code": withAuthCode,
             "access_token": "AA|\(appID)|\(appSecret)"
         ]) else {
-            Log.error("could not create url for getAccessToken")
+            Log.error("Could not create url for getAccessToken")
             return
         }
-        
+
         let task = session.dataTaskWithURL(url) { (data, response, error) in
-            if let _ = error {
-                completion(nil, AccountKitClientError.networkError)
-            } else if let response = response as? HTTPURLResponse, 200...299 ~= response.statusCode {
-                completion(data, nil)
-            } else {
-                completion(nil, AccountKitClientError.networkError)
+            do {
+                if let data = data {
+                    try completion(data, nil)
+                } else if let error = error {
+                    try completion(nil, AccountKitClientError.networkError(error.localizedDescription))
+                } else {
+                    try completion(nil, AccountKitClientError.customError("Unknown error"))
+                }
+            } catch {
+                Log.error("Unable to parse response for getAccessToken \(error.localizedDescription)")
+                return
             }
         }
         task.resume()
-    }
-
-    public func getAccountData(completion: @escaping HTTPResult) {
-
     }
 
     // MARK: Utility
