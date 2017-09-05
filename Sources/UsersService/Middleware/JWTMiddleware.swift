@@ -31,49 +31,45 @@ public class JWTMiddleware: RouterMiddleware {
     public func handle(request: RouterRequest, response: RouterResponse, next: @escaping () -> Swift.Void) {
 
         guard let signedJWTToken = extractSignedTokenFromRequest(request) else {
-            sendResponse(response, withStatusCode: .badRequest, withMessage: "auth header is invalid; use format 'Authorization: Bearer [jwt]")
+            sendResponse(response, withStatusCode: .badRequest, withMessage: "Auth header is invalid; Use format 'Authorization: Bearer [signed-jwt]'.")
             return
         }
 
         do {
-            let jwt = try jwtComposer.getVerifiedJWTFromSignedToken(signedJWTToken)
-            try jwtComposer.verifyReservedClaimsForPayload(jwt.payload, iss: "http://gamenight.udacity.com", sub: "users microservice")
-            try jwtComposer.verifyPrivateClaimsForPayload(jwt.payload) { payload in
-
-                var invalidClaims = [String]()
+            let jwtVerifier = try jwtComposer.getJWTVerifierWithSignedToken(signedJWTToken)
+            try jwtComposer.verifyAlgorithmAndKeyForJWT(jwtVerifier)
+            try jwtComposer.verifyReservedClaimsForJWT(jwtVerifier, iss: "http://gamenight.udacity.com", sub: "users microservice")
+            try jwtComposer.invalidPrivateClaimsForJWT(jwtVerifier) { payload in
 
                 guard let perms = payload["perms"] as? String else {
-                    Log.debug("permission denied; perms claim is missing")
+                    Log.debug("JWT is missing private claim for perms.")
                     return ["perms"]
                 }
 
                 for permission in permissions {
                     if perms.contains("\(permission.rawValue)") {
-                        Log.debug("permission granted: \(permission.rawValue)")
                         return []
                     }
                 }
 
                 if perms.contains("admin") {
-                    Log.debug("permission granted: admin")
-                } else {
-                    Log.debug("permission denied; need one of these \(permissions)")
-                    invalidClaims.append("perms")
+                    return []
                 }
 
-                return invalidClaims
+                Log.debug("JWT has invalid private claim: perms. perms should be one of these \(permissions).")
+                return ["perms"]
             }
-            request.userInfo["user_id"] = jwt.payload["user"]
+            request.userInfo["user_id"] = jwtVerifier.payload["user"]
         } catch JWTError.missingPublicKey {
-            sendResponse(response, withStatusCode: .internalServerError, withMessage: "public key is nil")
+            sendResponse(response, withStatusCode: .internalServerError, withMessage: "Public key is nil.")
         } catch JWTError.cannotCreateJWT {
-            sendResponse(response, withStatusCode: .internalServerError, withMessage: "cannot create jwt")
+            sendResponse(response, withStatusCode: .internalServerError, withMessage: "Cannot create JWT.")
         } catch JWTError.cannotVerifyAlgAndKey {
-            sendResponse(response, withStatusCode: .badRequest, withMessage: "cannot verify jwt alg and key")
+            sendResponse(response, withStatusCode: .badRequest, withMessage: "Cannot verify JWT alg and key.")
         } catch JWTError.invalidPayload(let message) {
-            sendResponse(response, withStatusCode: .badRequest, withMessage: "invalid jwt payload: \(message)")
+            sendResponse(response, withStatusCode: .badRequest, withMessage: "Invalid JWT payload: \(message).")
         } catch {
-            sendResponse(response, withStatusCode: .internalServerError, withMessage: "failed to verify JWT")
+            sendResponse(response, withStatusCode: .internalServerError, withMessage: "Failed to verify JWT.")
         }
 
         next()
@@ -86,20 +82,19 @@ public class JWTMiddleware: RouterMiddleware {
             try response.send(json: JSON(["message": "\(message)"]))
                         .status(statusCode).end()
         } catch {
-            Log.error("failed to send response")
+            Log.error("Failed to send response")
         }
     }
 
     private func extractSignedTokenFromRequest(_ request: RouterRequest) -> String? {
         guard let authHeader = request.headers["Authorization"] else {
-            Log.error("auth header is missing")
+            Log.error("Auth header is missing.")
             return nil
         }
 
         let authHeaderComponents = authHeader.components(separatedBy: " ")
 
-        if authHeaderComponents.count < 2 || authHeaderComponents[0] != "Bearer" {
-            Log.error("auth header is invalid; use format 'Authorization: Bearer [signed-jwt]'")
+        if authHeaderComponents.count < 2 || authHeaderComponents[0] != "Bearer" {            
             return nil
         }
 

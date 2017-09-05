@@ -1,4 +1,4 @@
-// NOTE: https://developers.facebook.com/docs/accountkit/graphapi
+// https://developers.facebook.com/docs/accountkit/graphapi
 
 import Foundation
 import LoggerAPI
@@ -30,15 +30,15 @@ public class AccountKitClient {
 
     // MARK: Requests
 
-    // exchange user auth code for user access token
     public func getAccessToken(withAuthCode: String, completion: @escaping (Data?, Error?) throws -> Void) {
 
+        // Exchange user auth code for user access token
         guard let url = getURLWithPath("/access_token", withParameters: [
             "grant_type": "authorization_code",
             "code": withAuthCode,
             "access_token": "AA|\(appID)|\(appSecret)"
         ]) else {
-            Log.error("could not create url for getAccessToken")
+            Log.error("Could not create url for getAccessToken")
             return
         }
 
@@ -52,15 +52,11 @@ public class AccountKitClient {
                     try completion(nil, AccountKitClientError.networkError)
                 }
             } catch {
-                Log.error("unable to parse response for getAccessToken \(error.localizedDescription)")
+                Log.error("Unable to parse response for getAccessToken \(error.localizedDescription)")
                 return
             }
         }
         task.resume()
-    }
-
-    public func getAccountData(completion: @escaping (Data?, Error?) throws -> Void) {
-
     }
 
     // MARK: Utility

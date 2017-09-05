@@ -18,9 +18,6 @@ public struct User {
 
 extension User: JSONAble {
     public func toJSON() -> JSON {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-
         var dict = [String: Any]()
         let nilValue: Any? = nil
 
@@ -29,6 +26,9 @@ extension User: JSONAble {
         dict["location"] = location != nil ? location : nilValue
         dict["photo_url"] = photoURL != nil ? photoURL : nilValue
         dict["favorite_activities"] = favoriteActivities != nil ? favoriteActivities : nilValue
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
 
         dict["created_at"] = createdAt != nil ? dateFormatter.string(from: createdAt!) : nilValue
         dict["updated_at"] = updatedAt != nil ? dateFormatter.string(from: updatedAt!) : nilValue
@@ -42,8 +42,7 @@ extension User: JSONAble {
 extension User {
     func toMySQLRow() -> ([String: Any]) {
         var data = [String: Any]()
-
-        // If a value is nil, then it won't be added to the dictionary
+        
         data["id"] = id
         data["name"] = name
         data["location"] = location
