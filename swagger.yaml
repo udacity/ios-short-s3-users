@@ -260,21 +260,14 @@ definitions:
   UpdateFavorite:
     type: object
     properties:
-      add:
+      activities:
         type: array
         items:
           type: string
           description: IDs of activity to favorite.
           default: "4"
-      remove:
-        type: array
-        items:
-          type: string
-          description: IDs of activity to remove from favorites.
-          default: "5"
     required:
-      - add
-      - remove
+      - activities
   Message:
     type: object
     properties:
