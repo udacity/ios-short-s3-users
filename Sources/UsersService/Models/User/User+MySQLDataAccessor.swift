@@ -47,7 +47,7 @@ public class UserMySQLDataAccessor: UserMySQLDataAccessorProtocol {
                 .select(fields: ["user_id", "activity_id"], table: "favorites")
         let selectQuery = selectUser.wheres(statement: "id IN (?)", parameters: ids)
             .join(builder: selectFavorites, from: "id", to: "user_id", type: .LeftJoin)
-        
+
         let result = try execute(builder: selectQuery)
         let users = result.toUsers()
         return (users.count == 0) ? nil : users
@@ -80,10 +80,13 @@ public class UserMySQLDataAccessor: UserMySQLDataAccessorProtocol {
         return try connection!.execute(builder: builder)
     }
 
-    func execute(query: String) throws -> MySQLResultProtocol {
-        let connection = try pool.getConnection()
-        defer { pool.releaseConnection(connection!) }
-
-        return try connection!.execute(query: query)
+    public func isConnected() -> Bool {
+        do {
+            let connection = try pool.getConnection()
+            defer { pool.releaseConnection(connection!) }
+        } catch {
+            return false
+        }
+        return true
     }
 }

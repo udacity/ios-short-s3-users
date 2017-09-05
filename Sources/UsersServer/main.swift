@@ -25,6 +25,11 @@ let pool = MySQLConnectionPool(connectionString: connectionString, poolSize: 10,
 // Create data accessor (uses pool to get connections and access data!)
 let dataAccessor = UserMySQLDataAccessor(pool: pool)
 
+// Check connection to database
+if !dataAccessor.isConnected() {
+    Log.error("Unable to connect to MySQL database: \(connectionString)")
+}
+
 // Create AccountKit client
 let accountKitClient = AccountKitClient(
     session: URLSession(configuration: .default),
