@@ -65,8 +65,8 @@ router.get("/users", handler: handlers.getUsers)
 
 // POST
 router.post("/*", middleware: CheckRequestMiddleware(method: .post))
-router.post("/login", handler: handlers.login)
-router.post("/logout", handler: handlers.logout)
+router.post("/users/login", handler: handlers.login)
+router.post("/users/logout", handler: handlers.logout)
 
 // PUT
 router.put("/*", middleware: CheckRequestMiddleware(method: .put))

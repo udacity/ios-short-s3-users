@@ -81,6 +81,7 @@ public class JWTMiddleware: RouterMiddleware {
         do {
             try response.send(json: JSON(["message": "\(message)"]))
                         .status(statusCode).end()
+            return
         } catch {
             Log.error("Failed to send response")
         }
@@ -94,7 +95,7 @@ public class JWTMiddleware: RouterMiddleware {
 
         let authHeaderComponents = authHeader.components(separatedBy: " ")
 
-        if authHeaderComponents.count < 2 || authHeaderComponents[0] != "Bearer" {            
+        if authHeaderComponents.count < 2 || authHeaderComponents[0] != "Bearer" {
             return nil
         }
 

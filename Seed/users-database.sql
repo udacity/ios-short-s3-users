@@ -44,7 +44,7 @@ ALTER TABLE `users` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
 INSERT INTO `users` VALUES
-('1','Jarrod Parkes','Huntsville, AL','https://avatars0.githubusercontent.com/u/1331063?v=4&s=460','2017-07-24 20:43:51','2017-07-24 20:43:51'),
+('304120220060108','Jarrod Parkes','Huntsville, AL','https://avatars0.githubusercontent.com/u/1331063?v=4&s=460','2017-07-24 20:43:51','2017-07-24 20:43:51'),
 ('2','Nic Jackson','London, UK','https://avatars2.githubusercontent.com/u/773533?v=4&s=400','2017-07-24 20:43:51','2017-07-24 20:43:51'),
 ('3','Gabrielle Miller-Messner','Oakland, CA','','2017-07-24 20:43:51','2017-07-24 20:43:51'),
 ('4','Kate Rotondo','San Francisco, CA','','2017-07-24 20:43:51','2017-07-24 20:43:51');
@@ -75,8 +75,8 @@ ALTER TABLE `favorites` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
 LOCK TABLES `favorites` WRITE;
 /*!40000 ALTER TABLE `favorites` DISABLE KEYS */;
 INSERT INTO `favorites` VALUES
-(1,'1',4,'2017-07-24 20:43:51','2017-07-24 20:43:51'),
-(2,'1',5,'2017-07-24 20:43:51','2017-07-24 20:43:51'),
+(1,'304120220060108',4,'2017-07-24 20:43:51','2017-07-24 20:43:51'),
+(2,'304120220060108',5,'2017-07-24 20:43:51','2017-07-24 20:43:51'),
 (3,'2',6,'2017-07-24 20:43:51','2017-07-24 20:43:51');
 /*!40000 ALTER TABLE `favorites` ENABLE KEYS */;
 UNLOCK TABLES;

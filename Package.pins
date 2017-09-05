@@ -5,7 +5,7 @@
       "package": "CCurl",
       "reason": null,
       "repositoryURL": "https://github.com/IBM-Swift/CCurl.git",
-      "version": "0.4.0"
+      "version": "0.4.1"
     },
     {
       "package": "CEpoll",
@@ -23,7 +23,7 @@
       "package": "HeliumLogger",
       "reason": null,
       "repositoryURL": "https://github.com/IBM-Swift/HeliumLogger.git",
-      "version": "1.7.0"
+      "version": "1.7.1"
     },
     {
       "package": "Kitura",
@@ -41,7 +41,7 @@
       "package": "Kitura-TemplateEngine",
       "reason": null,
       "repositoryURL": "https://github.com/IBM-Swift/Kitura-TemplateEngine.git",
-      "version": "1.7.1"
+      "version": "1.7.2"
     },
     {
       "package": "LinuxBridge",
@@ -53,7 +53,7 @@
       "package": "LoggerAPI",
       "reason": null,
       "repositoryURL": "https://github.com/IBM-Swift/LoggerAPI.git",
-      "version": "1.7.0"
+      "version": "1.7.1"
     },
     {
       "package": "MySQL",

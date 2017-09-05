@@ -66,7 +66,7 @@ public class UserMySQLDataAccessor: UserMySQLDataAccessorProtocol {
         let updateQuery = MySQLQueryBuilder()
                 .update(data: user.toMySQLRow(), table: "users")
                 .wheres(statement: "Id=?", parameters: "\(user.id!)")
-
+        
         let result = try execute(builder: updateQuery)
         return result.affectedRows > 0
     }

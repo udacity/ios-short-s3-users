@@ -118,50 +118,46 @@ public class Handlers {
     public func login(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
         guard let code = request.queryParameters["code"] else {
-            Log.error("code (query parameter) missing")
-            try response.send(json: JSON(["message": "code (query parameter) missing"]))
+            Log.error("Cannot initialize query parameter: code. code should be a valid AccountKit authorization code.")
+            try response.send(json: JSON(["message": "Cannot initialize query parameter: code. code should be a valid AccountKit authorization code."]))
                         .status(.badRequest).end()
             return
         }
 
         accountKitClient.getAccessToken(withAuthCode: code) { (data, error) in
-            guard let data = data else {
-                Log.error("data is nil, error is \(error?.localizedDescription ?? "nil")")
-                try response.send(json: JSON(["message": "could not get AccountKit access token"]))
+            guard let data = data, let parsedData = try JSONSerialization.jsonObject(with: data) as? [String:Any] else {
+                Log.error("Request for AccountKit access token failed. Error: \(error?.localizedDescription ?? "nil").")
+                try response.send(json: JSON(["message": "Request for AccountKit access token failed."]))
                             .status(.internalServerError).end()
                 return
             }
 
-            guard let parsedData = try JSONSerialization.jsonObject(with: data) as? [String:Any],
-                let id = parsedData["id"] as? String else {
-                    Log.error("could not find AccountKit id")
-                    try response.send(json: JSON(["message": "could not find AccountKit id"]))
-                                .status(.internalServerError).end()
-                    return
+            guard let id = parsedData["id"] as? String else {
+                Log.error("Unable to initialize AccountKit id from \(parsedData).")
+                try response.send(json: JSON(["message": "Unable to initialize AccountKit id from \(parsedData)."]))
+                            .status(.internalServerError).end()
+                return
             }
 
-            let stubUser = User(
-                id: id,
-                name: nil,
-                location: nil,
-                photoURL: nil,
-                favoriteActivities: nil,
-                createdAt: nil, updatedAt: nil)
+            var stubUser = User()
+            stubUser.id = id
 
             let isNewUser = try self.dataAccessor.upsertStubUser(stubUser)
 
             do {
-                let jwt = try self.jwtComposer.createSignedTokenWithPayload([
+                let payload: [String: Any] = [
                     "iss": "http://gamenight.udacity.com",
                     "exp": Date().append(months: 1).timeIntervalSince1970,
                     "sub": "users microservice",
                     "perms": isNewUser ? "usersProfile" : "usersAll,activities,events,friends",
                     "user": id
-                ])
+                ]
+                let jwt = try self.jwtComposer.createSignedTokenWithPayload(payload)
                 try response.send(json: JSON(["jwt": jwt, "id": id])).status(.OK).end()
             } catch {
-                Log.error("could not create signed jwt")
-                try response.status(.internalServerError).end()
+                Log.error("Unable to generate signed JWT.")
+                try response.send(json: JSON(["message": "Unable to generate signed JWT."]))
+                            .status(.internalServerError).end()
             }
         }
     }
@@ -175,16 +171,15 @@ public class Handlers {
     public func updateProfile(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
         guard let id = request.userInfo["user_id"] as? String else {
-            Log.error("could not get user_id from jwt")
-            try response.send(json: JSON(["message": "could not get user_id from jwt"]))
+            Log.error("Cannot access current user's id.")
+            try response.send(json: JSON(["message": "Cannot access current user's id."]))
                         .status(.internalServerError).end()
             return
         }
 
         guard let body = request.body, case let .json(json) = body else {
-            Log.error("body contains invalid JSON")
-            Log.info("\(String(describing: request.body))")
-            try response.send(json: JSON(["message": "body is missing JSON or JSON is invalid"]))
+            Log.error("Cannot initialize request body. This endpoint expects the request body to be a valid JSON object.")
+            try response.send(json: JSON(["message": "Cannot initialize request body. This endpoint expects the request body to be a valid JSON object."]))
                         .status(.badRequest).end()
             return
         }
@@ -201,22 +196,64 @@ public class Handlers {
             ["id", "name", "location", "photo_url"])
 
         if missingParameters.count != 0 {
-            Log.error("parameters missing \(missingParameters)")
-            try response.send(json: JSON(["message": "parameters missing \(missingParameters)"]))
+            Log.error("Unable to initialize parameters from request body: \(missingParameters).")
+            try response.send(json: JSON(["message": "Unable to initialize parameters from request body: \(missingParameters)."]))
                         .status(.badRequest).end()
             return
         }
 
+        Log.info("\(updateUser)")
+
         let success = try dataAccessor.updateUser(updateUser)
 
         if success {
-            try response.send(json: JSON(["message": "user updated"])).status(.OK).end()
+            try response.send(json: JSON(["message": "User profile updated."])).status(.OK).end()
+            return
         }
 
         try response.status(.notModified).end()
     }
 
     public func updateFavorites(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
-        // TODO: Add implementation.
+
+        guard let id = request.userInfo["user_id"] as? String else {
+            Log.error("Cannot access current user's id.")
+            try response.send(json: JSON(["message": "Cannot access current user's id."]))
+                        .status(.internalServerError).end()
+            return
+        }
+
+        guard let body = request.body, case let .json(json) = body else {
+            Log.error("Cannot initialize request body. This endpoint expects the request body to be a valid JSON object.")
+            try response.send(json: JSON(["message": "Cannot initialize request body. This endpoint expects the request body to be a valid JSON object."]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        guard let favoritesActivitiesJSON = json["activities"].array else {
+            Log.error("Cannot initialize body parameters: activities. activities is a JSON array of strings (activity ids) to favorite.")
+            try response.send(json: JSON(["message": "Cannot initialize body parameters: activities. activities is a JSON array of strings (activity ids) to favorite."]))
+                        .status(.badRequest).end()
+            return
+        }
+
+        let favoriteActivities = favoritesActivitiesJSON.map({$0.intValue})
+
+        let updateUser = User(
+            id: id,
+            name: nil,
+            location: nil,
+            photoURL: nil,
+            favoriteActivities: favoriteActivities,
+            createdAt: nil, updatedAt: nil)
+
+        let success = try dataAccessor.updateUser(updateUser)
+
+        if success {
+            try response.send(json: JSON(["message": "User favorites updated."])).status(.OK).end()
+            return
+        }
+
+        try response.status(.notModified).end()
     }
 }

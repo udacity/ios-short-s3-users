@@ -6,7 +6,7 @@ import LoggerAPI
 // MARK: - AccountKitClientError: Error
 
 enum AccountKitClientError: Error {
-    case networkError
+    case networkError(String)
     case customError(String)
 }
 
@@ -44,12 +44,12 @@ public class AccountKitClient {
 
         let task = session.dataTaskWithURL(url) { (data, response, error) in
             do {
-                if let _ = error {
-                    try completion(nil, AccountKitClientError.networkError)
-                } else if let response = response as? HTTPURLResponse, 200...299 ~= response.statusCode {
+                if let data = data {
                     try completion(data, nil)
+                } else if let error = error {
+                    try completion(nil, AccountKitClientError.networkError(error.localizedDescription))
                 } else {
-                    try completion(nil, AccountKitClientError.networkError)
+                    try completion(nil, AccountKitClientError.customError("Unknown error"))
                 }
             } catch {
                 Log.error("Unable to parse response for getAccessToken \(error.localizedDescription)")
