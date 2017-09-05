@@ -201,7 +201,7 @@ public class Handlers {
                         .status(.badRequest).end()
             return
         }
-        
+
         let success = try dataAccessor.updateUser(updateUser)
 
         if success {
@@ -228,24 +228,30 @@ public class Handlers {
             return
         }
 
-        guard let favoritesActivitiesJSON = json["activities"].array else {
+        guard let favoriteActivitiesJSON = json["activities"].array else {
             Log.error("Cannot initialize body parameters: activities. activities is a JSON array of strings (activity ids) to favorite.")
             try response.send(json: JSON(["message": "Cannot initialize body parameters: activities. activities is a JSON array of strings (activity ids) to favorite."]))
                         .status(.badRequest).end()
             return
         }
 
-        let favoriteActivities = favoritesActivitiesJSON.map({$0.intValue})
+        var favorites: [Int] = []
+        for favoriteActivityJSON in favoriteActivitiesJSON {
+        if let favoriteString = favoriteActivityJSON.string, let favorite = Int(favoriteString) {
+                favorites.append(favorite)
+            }
+        }
+        guard favorites.count > 0 else {
+            Log.error("Cannot initialize body parameters: activities. activities is a JSON array of strings (activity ids) to favorite.")
+            try response.send(json: JSON(["message": "Cannot initialize body parameters: activities. activities is a JSON array of strings (activity ids) to favorite."]))
+                        .status(.badRequest).end()
+            return
+        }
 
-        let updateUser = User(
-            id: id,
-            name: nil,
-            location: nil,
-            photoURL: nil,
-            favoriteActivities: favoriteActivities,
-            createdAt: nil, updatedAt: nil)
+        var updateUser = User()
+        updateUser.id = id
 
-        let success = try dataAccessor.updateUser(updateUser)
+        let success = try dataAccessor.updateFavoritesForUser(updateUser, favorites: favorites)
 
         if success {
             try response.send(json: JSON(["message": "User favorites updated."])).status(.OK).end()

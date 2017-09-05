@@ -8,6 +8,7 @@ public protocol UserMySQLDataAccessorProtocol {
     func getUsers(pageSize: Int, pageNumber: Int) throws -> [User]?
     func upsertStubUser(_ user: User) throws -> Bool
     func updateUser(_ user: User) throws -> Bool
+    func updateFavoritesForUser(_ user: User, favorites: [Int]) throws -> Bool
 }
 
 // MARK: - UserMySQLDataAccessor: UserMySQLDataAccessorProtocol
@@ -99,6 +100,53 @@ public class UserMySQLDataAccessor: UserMySQLDataAccessorProtocol {
 
         let result = try execute(builder: updateQuery)
         return result.affectedRows > 0
+    }
+
+    public func updateFavoritesForUser(_ user: User, favorites: [Int]) throws -> Bool {
+        let userID = "\(user.id!)"
+        let deleteFavoritesQuery = MySQLQueryBuilder()
+            .delete(fromTable: "favorites")
+            .wheres(statement: "user_id=?", parameters: userID)
+        var result: MySQLResultProtocol
+
+        guard let connection = try pool.getConnection() else {
+            Log.error("Could not get a connection")
+            return false
+        }
+        defer { pool.releaseConnection(connection) }
+
+        func rollbackEventTransaction(withConnection: MySQLConnectionProtocol, message: String) -> Bool {
+            Log.error("Could not update user's favorites: \(message)")
+            try! connection.rollbackTransaction()
+            return false
+        }
+
+        connection.startTransaction()
+
+        do {
+            // Delete existing favorites for user, so they can be replaced
+            result = try connection.execute(builder: deleteFavoritesQuery)
+            if result.affectedRows < 1 {
+                return rollbackEventTransaction(withConnection: connection, message: "Failed to delete existing event games during update")
+            }
+
+            // Insert favorites for user
+            for favorite in favorites {
+                let insertFavoriteQuery = MySQLQueryBuilder()
+                    .insert(data: ["user_id": userID, "activity_id": favorite], table: "favorites")
+                result = try connection.execute(builder: insertFavoriteQuery)
+                if result.affectedRows < 1 {
+                    return rollbackEventTransaction(withConnection: connection, message: "Failed to insert favorite with ID of \(favorite) into favorites")
+                }
+            }
+
+            try connection.commitTransaction()
+
+        } catch {
+            return rollbackEventTransaction(withConnection: connection, message: "updateFavoritesForUser failed")
+        }
+
+        return true
     }
 
     // MARK: Utility
