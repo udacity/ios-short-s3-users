@@ -37,7 +37,7 @@ let accountKitClient = AccountKitClient(
     appSecret: env["ACCOUNT_KIT_APP_SECRET"] ?? "ACCOUNT_KIT_APP_SECRET"
 )
 
-// TODO: Use a service like S3 to deliver keys instead of injecting environment variables
+// FIXME: Use a service like S3 to deliver keys instead of injecting environment variables
 // Remove extra backslash characters (extra backslashes are added to keys when injecting)
 // Create JWT composer
 let jwtComposer = JWTComposer(
@@ -58,20 +58,22 @@ router.options("/*", handler: handlers.getOptions)
 // GET
 router.get("/*", middleware: CheckRequestMiddleware(method: .get))
 router.get("/*", middleware: JWTMiddleware(jwtComposer: jwtComposer, permissions: [.usersProfile, .usersAll]))
+router.get("/users/search", handler: handlers.searchUsers)
+router.get("/users/profile", handler: handlers.getCurrentUser)
+router.get("/users/:id", handler: handlers.getUsers)
 router.get("/users", handler: handlers.getUsers)
-router.get("/profile", handler: handlers.getProfile)
-router.get("/logout", handler: handlers.logout)
 
 // POST
 router.post("/*", middleware: CheckRequestMiddleware(method: .post))
 router.post("/login", handler: handlers.login)
+router.post("/logout", handler: handlers.logout)
 
 // PUT
 router.put("/*", middleware: CheckRequestMiddleware(method: .put))
-router.put("/profile", middleware: JWTMiddleware(jwtComposer: jwtComposer, permissions: [.usersProfile, .usersAll]))
-router.put("/profile", handler: handlers.updateProfile)
-router.put("/favorites", middleware: JWTMiddleware(jwtComposer: jwtComposer, permissions: [.usersAll]))
-router.put("/favorites", handler: handlers.updateFavorites)
+router.put("/users/profile", middleware: JWTMiddleware(jwtComposer: jwtComposer, permissions: [.usersProfile, .usersAll]))
+router.put("/users/profile", handler: handlers.updateProfile)
+router.put("/users/favorites", middleware: JWTMiddleware(jwtComposer: jwtComposer, permissions: [.usersAll]))
+router.put("/users/favorites", handler: handlers.updateFavorites)
 
 // Add an HTTP server and connect it to the router
 Kitura.addHTTPServer(onPort: 8080, with: router)

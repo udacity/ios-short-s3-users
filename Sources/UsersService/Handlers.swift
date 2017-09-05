@@ -32,25 +32,32 @@ public class Handlers {
 
     // MARK: GET
 
-    public func getUsers(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+    public func searchUsers(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+
+        guard let pageSize = Int(request.queryParameters["page_size"] ?? "10"), let pageNumber = Int(request.queryParameters["page_number"] ?? "1"),
+            pageSize > 0, pageSize <= 50 else {
+            Log.error("Cannot initialize query parameters: page_size, page_number. page_size must be (0, 50].")
+            try response.send(json: JSON(["message": "Cannot initialize query parameters: page_size, page_number. page_size must be (0, 50]."]))
+                        .status(.badRequest).end()
+            return
+        }
 
         guard let body = request.body, case let .json(json) = body else {
-            Log.error("body contains invalid JSON")
-            try response.send(json: JSON(["message": "body is missing JSON or JSON is invalid"]))
+            Log.error("Cannot initialize request body. This endpoint expects the request body to be a valid JSON object.")
+            try response.send(json: JSON(["message": "Cannot initialize request body. This endpoint expects the request body to be a valid JSON object."]))
                         .status(.badRequest).end()
             return
         }
 
-        let ids = json["ids"].arrayValue.map({$0.stringValue})
-
-        guard ids.count > 0 else {
-            Log.error("request body is missing array of user ids")
-            try response.send(json: JSON(["message": "request body is missing array of user ids"]))
+        guard let idFilter = json["id"].array else {
+            Log.error("Cannot initialize body parameters: id. id is a JSON array of strings (event ids) to filter.")
+            try response.send(json: JSON(["message": "Cannot initialize body parameters: id. id is a JSON array of strings (event ids) to filter."]))
                         .status(.badRequest).end()
             return
         }
 
-        let users = try dataAccessor.getUsers(withIDs: ids)
+        let ids = idFilter.map({$0.stringValue})
+        let users = try dataAccessor.getUsers(withIDs: ids, pageSize: pageSize, pageNumber: pageNumber)
 
         if users == nil {
             try response.status(.notFound).end()
@@ -60,12 +67,42 @@ public class Handlers {
         try response.send(json: users!.toJSON()).status(.OK).end()
     }
 
-    public func getProfile(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+    public func getCurrentUser(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+
+        guard let id = request.userInfo["user_id"] as? String else {
+            Log.error("Cannot access current user's id.")
+            try response.send(json: JSON(["message": "Cannot access current user's id."]))
+                        .status(.internalServerError).end()
+            return
+        }
+
+        let users = try dataAccessor.getUsers(withIDs: [id], pageSize: 1, pageNumber: 1)
+
+        if users == nil {
+            try response.status(.notFound).end()
+            return
+        }
+
+        try response.send(json: users!.toJSON()).status(.OK).end()
+    }
+
+    public func getUsers(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+
+        guard let pageSize = Int(request.queryParameters["page_size"] ?? "10"), let pageNumber = Int(request.queryParameters["page_number"] ?? "1"),
+            pageSize > 0, pageSize <= 50 else {
+            Log.error("Cannot initialize query parameters: page_size, page_number. page_size must be (0, 50].")
+            try response.send(json: JSON(["message": "Cannot initialize query parameters: page_size, page_number. page_size must be (0, 50]."]))
+                        .status(.badRequest).end()
+            return
+        }
 
         var users: [User]?
+        let id = request.parameters["id"]
 
-        if let id = request.userInfo["user_id"] as? String {
-            users = try dataAccessor.getUsers(withID: id)
+        if let id = id {
+            users = try dataAccessor.getUsers(withIDs: [id], pageSize: 1, pageNumber: 1)
+        } else {
+            users = try dataAccessor.getUsers(pageSize: pageSize, pageNumber: pageNumber)
         }
 
         if users == nil {
@@ -74,10 +111,6 @@ public class Handlers {
         }
 
         try response.send(json: users!.toJSON()).status(.OK).end()
-    }
-
-    public func logout(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
-        // TODO: Add implementation.
     }
 
     // MARK: POST
@@ -131,6 +164,10 @@ public class Handlers {
                 try response.status(.internalServerError).end()
             }
         }
+    }
+
+    public func logout(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
+        // TODO: Add implementation.
     }
 
     // MARK: PUT

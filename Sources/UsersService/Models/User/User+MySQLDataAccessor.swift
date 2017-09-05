@@ -4,8 +4,8 @@ import LoggerAPI
 // MARK: - UserMySQLDataAccessorProtocol
 
 public protocol UserMySQLDataAccessorProtocol {
-    func getUsers(withID id: String) throws -> [User]?
-    func getUsers(withIDs ids: [String]) throws -> [User]?
+    func getUsers(withIDs ids: [String], pageSize: Int, pageNumber: Int) throws -> [User]?
+    func getUsers(pageSize: Int, pageNumber: Int) throws -> [User]?
     func upsertStubUser(_ user: User) throws -> Bool
     func updateUser(_ user: User) throws -> Bool
 }
@@ -26,21 +26,7 @@ public class UserMySQLDataAccessor: UserMySQLDataAccessorProtocol {
 
     // MARK: Queries
 
-    public func getUsers(withID id: String) throws -> [User]? {
-        let selectUser = MySQLQueryBuilder()
-                .select(fields: ["id", "name", "location", "photo_url", "created_at", "updated_at"], table: "users")
-        let selectFavorites = MySQLQueryBuilder()
-                .select(fields: ["user_id", "activity_id"], table: "favorites")
-
-        let selectQuery = selectUser.wheres(statement:"id=?", parameters: id)
-            .join(builder: selectFavorites, from: "id", to: "user_id", type: .LeftJoin)
-
-        let result = try execute(builder: selectQuery)
-        let users = result.toUsers()
-        return (users.count == 0) ? nil : users
-    }
-
-    public func getUsers(withIDs ids: [String]) throws -> [User]? {
+    public func getUsers(withIDs ids: [String], pageSize: Int = 10, pageNumber: Int = 1) throws -> [User]? {
         let selectUser = MySQLQueryBuilder()
                 .select(fields: ["id", "name", "location", "photo_url", "created_at", "updated_at"], table: "users")
         let selectFavorites = MySQLQueryBuilder()
@@ -50,6 +36,20 @@ public class UserMySQLDataAccessor: UserMySQLDataAccessorProtocol {
 
         let result = try execute(builder: selectQuery)
         let users = result.toUsers()
+        return (users.count == 0) ? nil : users
+    }
+
+    public func getUsers(pageSize: Int = 10, pageNumber: Int = 1) throws -> [User]? {
+        let selectUser = MySQLQueryBuilder()
+                .select(fields: ["id", "name", "location", "photo_url", "created_at", "updated_at"], table: "users")
+        let selectFavorites = MySQLQueryBuilder()
+                .select(fields: ["user_id", "activity_id"], table: "favorites")
+        let selectQuery = selectUser.join(builder: selectFavorites, from: "id", to: "user_id", type: .LeftJoin)
+
+        let result = try execute(builder: selectQuery)
+        result.seek(offset: cacluateOffset(pageSize: pageSize, pageNumber: pageNumber))
+
+        let users = result.toUsers(pageSize: pageSize)
         return (users.count == 0) ? nil : users
     }
 
@@ -78,6 +78,10 @@ public class UserMySQLDataAccessor: UserMySQLDataAccessorProtocol {
         defer { pool.releaseConnection(connection!) }
 
         return try connection!.execute(builder: builder)
+    }
+
+    func cacluateOffset(pageSize: Int, pageNumber: Int) -> Int64 {
+        return Int64(pageNumber > 1 ? pageSize * (pageNumber - 1) : 0)
     }
 
     public func isConnected() -> Bool {

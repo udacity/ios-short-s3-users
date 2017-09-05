@@ -6,7 +6,7 @@ import Foundation
 
 public extension MySQLResultProtocol {
 
-    public func toUsers() -> [User] {
+    public func toUsers(pageSize: Int = 10) -> [User] {
 
         var usersDictionary = [String:User]()
 
@@ -50,6 +50,11 @@ public extension MySQLResultProtocol {
                 }
             } else {
                 Log.error("user.id not found in \(row)")
+            }
+
+            // Return collection limited by page size if specified
+            if pageSize > 0 && usersDictionary.count == Int(pageSize) {
+                break
             }
         }
 
