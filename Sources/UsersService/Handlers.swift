@@ -50,8 +50,8 @@ public class Handlers {
         }
 
         guard let idFilter = json["id"].array else {
-            Log.error("Cannot initialize body parameters: id. id is a JSON array of strings (event ids) to filter.")
-            try response.send(json: JSON(["message": "Cannot initialize body parameters: id. id is a JSON array of strings (event ids) to filter."]))
+            Log.error("Cannot initialize body parameters: id. id is a JSON array of strings (user ids) to filter.")
+            try response.send(json: JSON(["message": "Cannot initialize body parameters: id. id is a JSON array of strings (user ids) to filter."]))
                         .status(.badRequest).end()
             return
         }
