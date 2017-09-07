@@ -142,7 +142,19 @@ public class Handlers {
             var stubUser = User()
             stubUser.id = id
 
-            let isNewUser = try self.dataAccessor.upsertStubUser(stubUser)
+            let _ = try self.dataAccessor.upsertStubUser(stubUser)
+
+            guard let users = try self.dataAccessor.getUsers(withIDs: [id], pageSize: 1, pageNumber: 1), users.count == 1 else {
+                Log.error("Unable to initialize user from id.")
+                try response.send(json: JSON(["message": "Unable to initialize user from id."]))
+                            .status(.internalServerError).end()
+                return
+            }
+
+            let missingParameters = users[0].validateParameters(
+                ["id", "name", "location", "photo_url"])
+            let isNewUser = missingParameters.count != 0
+            Log.info("\(isNewUser)")
 
             do {
                 let payload: [String: Any] = [
