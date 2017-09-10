@@ -58,14 +58,14 @@
     {
       "package": "MySQL",
       "reason": null,
-      "repositoryURL": "https://github.com/nicholasjackson/swift-mysql.git",
-      "version": "1.7.2"
+      "repositoryURL": "https://github.com/jarrodparkes/swift-mysql",
+      "version": "1.7.3"
     },
     {
       "package": "OpenSSL",
       "reason": null,
       "repositoryURL": "https://github.com/IBM-Swift/OpenSSL.git",
-      "version": "0.3.6"
+      "version": "0.3.7"
     },
     {
       "package": "PerfectCrypto",
@@ -113,7 +113,7 @@
       "package": "SwiftyJSON",
       "reason": null,
       "repositoryURL": "https://github.com/IBM-Swift/SwiftyJSON.git",
-      "version": "16.0.1"
+      "version": "16.0.2"
     }
   ],
   "version": 1

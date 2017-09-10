@@ -182,6 +182,7 @@ public class Handlers {
 
     public func updateProfile(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
+        // FIXME: Should we also return a JWT here if the user profile is fully updated?
         guard let id = request.userInfo["user_id"] as? String else {
             Log.error("Cannot access current user's id.")
             try response.send(json: JSON(["message": "Cannot access current user's id."]))

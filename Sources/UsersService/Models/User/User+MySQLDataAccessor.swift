@@ -43,11 +43,12 @@ public class UserMySQLDataAccessor: UserMySQLDataAccessorProtocol {
         // Once the ids are determind, perform the joins
         if newIDs.count > 0 {
             let selectUser = MySQLQueryBuilder()
-                    .select(fields: ["id", "name", "location", "photo_url", "created_at", "updated_at"], table: "users")
+                .select(fields: ["id", "name", "location", "photo_url", "created_at", "updated_at"], table: "users")
             let selectFavorites = MySQLQueryBuilder()
-                    .select(fields: ["user_id", "activity_id"], table: "favorites")
+                .select(fields: ["user_id", "activity_id"], table: "favorites")
             let selectQuery = selectUser.wheres(statement: "id IN (?)", parameters: newIDs)
-                    .join(builder: selectFavorites, from: "id", to: "user_id", type: .LeftJoin)
+                .join(builder: selectFavorites, from: "id", to: "user_id", type: .LeftJoin)
+                .order(byExpression: "id", order: .Ascending)
 
             let result = try execute(builder: selectQuery)
             users = result.toUsers()
@@ -71,11 +72,12 @@ public class UserMySQLDataAccessor: UserMySQLDataAccessorProtocol {
         // Once the ids are determind, perform the joins
         if ids.count > 0 {
             let selectUser = MySQLQueryBuilder()
-                    .select(fields: ["id", "name", "location", "photo_url", "created_at", "updated_at"], table: "users")
+                .select(fields: ["id", "name", "location", "photo_url", "created_at", "updated_at"], table: "users")
             let selectFavorites = MySQLQueryBuilder()
-                    .select(fields: ["user_id", "activity_id"], table: "favorites")
+                .select(fields: ["user_id", "activity_id"], table: "favorites")
             let selectQuery = selectUser.wheres(statement: "id IN (?)", parameters: ids)
-                    .join(builder: selectFavorites, from: "id", to: "user_id", type: .LeftJoin)
+                .join(builder: selectFavorites, from: "id", to: "user_id", type: .LeftJoin)
+                .order(byExpression: "id", order: .Ascending)
 
             let result = try execute(builder: selectQuery)
             users = result.toUsers()
