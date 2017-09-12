@@ -47,17 +47,11 @@ func cleanKeyString(_ string: String) -> String {
 }
 
 // FIXME: Use a service like S3 to deliver keys instead of injecting environment variables
-let privateKeyClean = cleanKeyString(env["PRIVATE_KEY"] ?? "")
-let publicKeyClean = cleanKeyString(env["PUBLIC_KEY"] ?? "")
-
-// Create JWT composer
-let jwtComposer = JWTComposer(
-    privateKey: privateKeyClean,
-    publicKey: publicKeyClean
-)
+let _ = cleanKeyString(env["PRIVATE_KEY"] ?? "")
+let _ = cleanKeyString(env["PUBLIC_KEY"] ?? "")
 
 // Create handlers
-let handlers = Handlers(dataAccessor: dataAccessor, accountKitClient: accountKitClient, jwtComposer: jwtComposer)
+let handlers = Handlers(dataAccessor: dataAccessor, accountKitClient: accountKitClient)
 
 // Create router and middleware
 let router = Router()
@@ -68,23 +62,13 @@ router.options("/*", handler: handlers.getOptions)
 
 // GET
 router.get("/*", middleware: CheckRequestMiddleware(method: .get))
-router.get("/*", middleware: JWTMiddleware(jwtComposer: jwtComposer, permissions: [.usersProfile, .usersAll]))
-router.get("/users/search", handler: handlers.searchUsers)
-router.get("/users/profile", handler: handlers.getCurrentUser)
-router.get("/users/:id", handler: handlers.getUsers)
-router.get("/users", handler: handlers.getUsers)
 
 // POST
 router.post("/*", middleware: CheckRequestMiddleware(method: .post))
 router.post("/users/login", handler: handlers.login)
-router.post("/users/logout", handler: handlers.logout)
 
 // PUT
 router.put("/*", middleware: CheckRequestMiddleware(method: .put))
-router.put("/users/profile", middleware: JWTMiddleware(jwtComposer: jwtComposer, permissions: [.usersProfile, .usersAll]))
-router.put("/users/profile", handler: handlers.updateProfile)
-router.put("/users/favorites", middleware: JWTMiddleware(jwtComposer: jwtComposer, permissions: [.usersAll]))
-router.put("/users/favorites", handler: handlers.updateFavorites)
 
 // Add an HTTP server and connect it to the router
 Kitura.addHTTPServer(onPort: 8080, with: router)
