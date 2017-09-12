@@ -60,6 +60,7 @@ let jwtComposer = JWTComposer(
 let handlers = Handlers(dataAccessor: dataAccessor, accountKitClient: accountKitClient, jwtComposer: jwtComposer)
 
 // Create router and middleware
+// TODO: Add JWT middleware to appropriate endpoints.
 let router = Router()
 router.all("/*", middleware: BodyParser())
 router.all("/*", middleware: AllRemoteOriginMiddleware())
@@ -68,7 +69,6 @@ router.options("/*", handler: handlers.getOptions)
 
 // GET
 router.get("/*", middleware: CheckRequestMiddleware(method: .get))
-router.get("/*", middleware: JWTMiddleware(jwtComposer: jwtComposer, permissions: [.usersProfile, .usersAll]))
 router.get("/users/search", handler: handlers.searchUsers)
 router.get("/users/profile", handler: handlers.getCurrentUser)
 router.get("/users/:id", handler: handlers.getUsers)
@@ -81,9 +81,7 @@ router.post("/users/logout", handler: handlers.logout)
 
 // PUT
 router.put("/*", middleware: CheckRequestMiddleware(method: .put))
-router.put("/users/profile", middleware: JWTMiddleware(jwtComposer: jwtComposer, permissions: [.usersProfile, .usersAll]))
 router.put("/users/profile", handler: handlers.updateProfile)
-router.put("/users/favorites", middleware: JWTMiddleware(jwtComposer: jwtComposer, permissions: [.usersAll]))
 router.put("/users/favorites", handler: handlers.updateFavorites)
 
 // Add an HTTP server and connect it to the router

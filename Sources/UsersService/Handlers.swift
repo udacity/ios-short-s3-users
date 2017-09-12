@@ -139,38 +139,13 @@ public class Handlers {
                 return
             }
 
-            var stubUser = User()
-            stubUser.id = id
+            Log.info("login for user id: \(id)")
 
-            let _ = try self.dataAccessor.upsertStubUser(stubUser)
-
-            guard let users = try self.dataAccessor.getUsers(withIDs: [id], pageSize: 1, pageNumber: 1), users.count == 1 else {
-                Log.error("Unable to initialize user from id.")
-                try response.send(json: JSON(["message": "Unable to initialize user from id."]))
-                            .status(.internalServerError).end()
-                return
-            }
-
-            let missingParameters = users[0].validateParameters(
-                ["id", "name", "location", "photo_url"])
-            let isNewUser = missingParameters.count != 0
-            Log.info("\(isNewUser)")
-
-            do {
-                let payload: [String: Any] = [
-                    "iss": "http://gamenight.udacity.com",
-                    "exp": Date().append(months: 1).timeIntervalSince1970,
-                    "sub": "users microservice",
-                    "perms": isNewUser ? "usersProfile" : "usersAll,activities,events,friends",
-                    "user": id
-                ]
-                let jwt = try self.jwtComposer.createSignedTokenWithPayload(payload)
-                try response.send(json: JSON(["jwt": jwt, "id": id])).status(.OK).end()
-            } catch {
-                Log.error("Unable to generate signed JWT.")
-                try response.send(json: JSON(["message": "Unable to generate signed JWT."]))
-                            .status(.internalServerError).end()
-            }
+            // TODO: Finish login implementation.
+            // Upsert a user.
+            // Check if user has already completed profile to determine JWT permissions.
+            // Create and sign JWT.
+            // Send JSON response.
         }
     }
 
@@ -182,7 +157,6 @@ public class Handlers {
 
     public func updateProfile(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
 
-        // FIXME: Should we also return a JWT here if the user profile is fully updated?
         guard let id = request.userInfo["user_id"] as? String else {
             Log.error("Cannot access current user's id.")
             try response.send(json: JSON(["message": "Cannot access current user's id."]))
