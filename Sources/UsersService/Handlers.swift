@@ -32,5 +32,10 @@ public class Handlers {
 
     public func login(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) throws {
         // TODO: Add implementation.
+        // Ensure a value for `code` exists in the request's query parameters.
+        // Use the `accountKitClient` to perform a code-to-token exchange.
+        // Specify a completion handler that parses the response for the code-to-token exchange.
+        // If the request was successful, then extract the `id` value (you can ignore the `access_token`).
+        // Otherwise print an error message saying the `id` could not be found.
     }
 }
