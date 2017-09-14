@@ -62,14 +62,19 @@ public class JWTMiddleware: RouterMiddleware {
             request.userInfo["user_id"] = jwtVerifier.payload["user"]
         } catch JWTError.missingPublicKey {
             sendResponse(response, withStatusCode: .internalServerError, withMessage: "Public key is nil.")
+            return
         } catch JWTError.cannotCreateJWT {
             sendResponse(response, withStatusCode: .internalServerError, withMessage: "Cannot create JWT.")
+            return
         } catch JWTError.cannotVerifyAlgAndKey {
             sendResponse(response, withStatusCode: .badRequest, withMessage: "Cannot verify JWT alg and key.")
+            return
         } catch JWTError.invalidPayload(let message) {
             sendResponse(response, withStatusCode: .badRequest, withMessage: "Invalid JWT payload: \(message).")
+            return
         } catch {
             sendResponse(response, withStatusCode: .internalServerError, withMessage: "Failed to verify JWT.")
+            return
         }
 
         next()
